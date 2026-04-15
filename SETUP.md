@@ -9,7 +9,7 @@ TAs: Alessandro Marinai, Davide Sferrazza, Stephany Ortuno
 ## 1. Clone the repo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/eomt-anomaly-segmentation.git
+git clone https://github.com/omerzkan/eomt-anomaly-segmentation.git
 cd eomt-anomaly-segmentation
 ```
 
