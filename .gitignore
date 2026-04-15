@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environments
+.env
+.venv
+venv/
+env/
+
+# Data — never commit datasets
+data/
+datasets/
+
+# Model weights — never commit large binaries
+trained_models/*.pth
+trained_models/*.tar
+trained_models/*.ckpt
+trained_models/*.pt
+# Exception: keep the folder itself tracked
+!trained_models/.gitkeep
+
+# Results and outputs — generated files
+results/
+outputs/
+*.txt
+!eval/README.md
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Weights & Biases
+wandb/
+
+# VS Code / IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
