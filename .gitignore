@@ -31,7 +31,9 @@ trained_models/*.pt
 results/
 outputs/
 *.txt
+!eval/requirements.txt
 !eval/README.md
+!eomt/requirements.txt
 
 # Jupyter
 .ipynb_checkpoints/
