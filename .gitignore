@@ -51,3 +51,7 @@ wandb/
 # OS
 .DS_Store
 Thumbs.db
+
+# Model weights — never commit large binaries
+trained_models/*
+!trained_models/.gitkeep
