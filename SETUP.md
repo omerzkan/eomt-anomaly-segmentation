@@ -33,7 +33,7 @@ Download from the shared Google Drive and place in `trained_models/`:
 - `eomt_cityscapes_semantic.pth` ← EoMT trained on Cityscapes
 - `eomt_coco_panoptic.pth`       ← EoMT trained on COCO
 
-**Drive link:** [INSERT LINK HERE]
+**Drive link:** https://drive.google.com/drive/folders/1q2vHUzora2nP52fP50zmoQAykWuwoGav
 
 ## 4. Download datasets
 
@@ -50,7 +50,7 @@ RoadAnomaly/
 
 **Dataset download links:**
 - Cityscapes val set: https://www.cityscapes-dataset.com/
-- Anomaly datasets (`Anomaly_Validation_Datasets.zip`): [INSERT DRIVE LINK]
+- Anomaly datasets (`Anomaly_Validation_Datasets.zip`): https://drive.google.com/drive/folders/1q2vHUzora2nP52fP50zmoQAykWuwoGav
 
 ## 5. Set up Weights & Biases
 
