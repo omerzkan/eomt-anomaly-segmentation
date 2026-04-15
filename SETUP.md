@@ -1,4 +1,3 @@
-cat > SETUP.md << 'EOF'
 # Setup Guide — EoMT Anomaly Segmentation
 
 PoliTo FAIMDL Course Project  
