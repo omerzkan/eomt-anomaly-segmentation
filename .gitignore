@@ -16,8 +16,10 @@ venv/
 env/
 
 # Data — never commit datasets
-data/
-datasets/
+data/*
+datasets/*
+!data/.gitkeep
+!datasets/.gitkeep
 
 # Model weights — never commit large binaries
 trained_models/*.pth
@@ -28,7 +30,8 @@ trained_models/*.pt
 !trained_models/.gitkeep
 
 # Results and outputs — generated files
-results/
+results/*
+!results/.gitkeep
 outputs/
 *.txt
 !eval/requirements.txt
