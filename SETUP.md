@@ -28,29 +28,28 @@ pip install -r eomt/requirements.txt
 ## 3. Download model weights
 
 Download from the shared Google Drive and place in `trained_models/`:
-- `erfnet_pretrained.pth`
-- `erfnet_encoder_pretrained.pth.tar`
-- `eomt_cityscapes_semantic.pth` ← EoMT trained on Cityscapes
-- `eomt_coco_panoptic.pth`       ← EoMT trained on COCO
+- `eomt_cityscapes.bin`  ← EoMT trained on Cityscapes (364 MB)
+- `eomt_coco.bin`        ← EoMT trained on COCO (357 MB)
+
+Note: `erfnet_pretrained.pth` and `erfnet_encoder_pretrained.pth.tar` 
+are already in the repo (committed by the professor).
 
 **Drive link:** https://drive.google.com/drive/folders/1q2vHUzora2nP52fP50zmoQAykWuwoGav
 
-## 4. Download datasets
+## 4. Download anomaly datasets
 
-Place all datasets under `data/` following this exact structure:
+Download `Anomaly_Validation_Datasets.zip` from the same Drive link,
+unzip it, and place the contents under `data/`:
+
+**Drive link:** https://drive.google.com/drive/folders/1q2vHUzora2nP52fP50zmoQAykWuwoGav
+
+Expected structure after unzipping:
 data/
-cityscapes/
-gtFine/
-leftImg8bit/
-RoadAnomaly21/
-RoadObstacle21/
-fishyscapes_static/
-LostAndFound/
-RoadAnomaly/
-
-**Dataset download links:**
-- Cityscapes val set: https://www.cityscapes-dataset.com/
-- Anomaly datasets (`Anomaly_Validation_Datasets.zip`): https://drive.google.com/drive/folders/1q2vHUzora2nP52fP50zmoQAykWuwoGav
+  RoadAnomaly21/
+  RoadObstacle21/
+  fs_static/
+  LostAndFound/
+  RoadAnomaly/
 
 ## 5. Set up Weights & Biases
 
