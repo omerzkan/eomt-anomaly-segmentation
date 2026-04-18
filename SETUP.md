@@ -43,8 +43,7 @@ Download from the shared Google Drive and place in `trained_models/`:
 - `eomt_cityscapes.bin` ← EoMT trained on Cityscapes (364 MB)
 - `eomt_coco.bin`       ← EoMT trained on COCO (357 MB)
 
-Note: `erfnet_pretrained.pth` and `erfnet_encoder_pretrained.pth.tar`
-are already in the repo (committed by the professor).
+Note: `erfnet_pretrained.pth` is committed directly in the repo — no need to download it separately.
 
 **Drive link:** https://drive.google.com/drive/folders/1q2vHUzora2nP52fP50zmoQAykWuwoGav
 
@@ -52,19 +51,21 @@ are already in the repo (committed by the professor).
 
 ## 4. Download anomaly datasets
 
-Download `Anomaly_Validation_Datasets.zip` from the same Drive link,
-unzip it, and place the contents under `data/`:
+Download `Anomaly_Validation_Datasets.zip` from the same Drive link.
 
 **Drive link:** https://drive.google.com/drive/folders/1q2vHUzora2nP52fP50zmoQAykWuwoGav
 
-Expected structure after unzipping:
+The zip extracts into a `Validation_Dataset/` subfolder. Expected structure after unzipping into `data/`:
 
+```
 data/
-  RoadAnomaly21/
-  RoadObstacle21/
-  fs_static/
-  LostAndFound/
-  RoadAnomaly/
+  Validation_Dataset/
+    RoadAnomaly21/
+    RoadObsticle21/      ← note: typo in original zip, not RoadObstacle21
+    RoadAnomaly/
+    fs_static/
+    FS_LostFound_full/   ← note: not LostAndFound
+```
 
 Note: `data/` and `trained_models/*.bin` are gitignored — they live
 only on your local machine and on Colab. Never commit them.
@@ -97,42 +98,94 @@ python -c "import wandb; print('wandb ok')"
 
 ## 7. Running on Google Colab
 
-1. Go to https://colab.research.google.com and enable GPU:
-   Runtime → Change runtime type → T4 GPU
+### 7.1 First-time setup (every new Colab session)
 
-2. Mount your Google Drive:
+Colab resets completely on every session — repeat steps 3–5 each time.
+
+**Step 1** — Enable GPU:
+> Runtime → Change runtime type → T4 GPU
+
+**Step 2** — Mount Google Drive:
 ```python
 from google.colab import drive
 drive.mount('/content/drive')
 ```
 
-3. Clone the repo inside Colab:
-```bash
+**Step 3** — Clone the repo:
+```python
 !git clone https://github.com/omerzkan/eomt-anomaly-segmentation.git
-%cd eomt-anomaly-segmentation
+%cd /content/eomt-anomaly-segmentation
 ```
 
-4. Install dependencies:
-```bash
+> ⚠️ Always use `%cd` (not `!cd`) to change directory. `%cd` persists for the session; `!cd` only applies to that one command.
+
+**Step 4** — Install dependencies:
+```python
 !pip install -r eval/requirements.txt
 !pip install -r eomt/requirements.txt
 ```
 
-5. Copy weights and datasets from your Drive into the repo:
+> When pip shows a "Restart session" dialog — **click Restart session**. This is normal. You do NOT need to re-run pip after restarting.
+
+**Step 5** — Copy weights from Drive:
 ```python
-!cp /content/drive/MyDrive/CourseProjectAnomaly/eomt_cityscapes.bin trained_models/
-!cp /content/drive/MyDrive/CourseProjectAnomaly/eomt_coco.bin trained_models/
-!unzip /content/drive/MyDrive/CourseProjectAnomaly/Anomaly_Validation_Datasets.zip -d data/
+!cp /content/drive/MyDrive/CourseProjectAnomaly/eomt_cityscapes.bin /content/eomt-anomaly-segmentation/trained_models/
+!cp /content/drive/MyDrive/CourseProjectAnomaly/eomt_coco.bin /content/eomt-anomaly-segmentation/trained_models/
 ```
 
-6. Run the ERFNet baseline:
-```bash
-!cd eval && python evalAnomaly.py
+**Step 6** — Unzip datasets (only needed once per session):
+```python
+!unzip /content/drive/MyDrive/CourseProjectAnomaly/Anomaly_Validation_Datasets.zip \
+  -d /content/eomt-anomaly-segmentation/data/
+```
+
+Verify the structure:
+```python
+import os
+print(os.listdir("/content/eomt-anomaly-segmentation/data/Validation_Dataset/"))
+# Expected: ['RoadAnomaly21', 'RoadObsticle21', 'RoadAnomaly', 'fs_static', 'FS_LostFound_full', ...]
 ```
 
 ---
 
-## 8. Branch strategy
+### 7.2 Running the ERFNet baseline (evalAnomaly.py)
+
+Always run from inside the `eval/` folder using `%cd`:
+
+```python
+%cd /content/eomt-anomaly-segmentation/eval
+
+# RoadAnomaly21
+!python evalAnomaly.py --input "/content/eomt-anomaly-segmentation/data/Validation_Dataset/RoadAnomaly21/images/*"
+
+# RoadObsticle21
+!python evalAnomaly.py --input "/content/eomt-anomaly-segmentation/data/Validation_Dataset/RoadObsticle21/images/*"
+
+# RoadAnomaly
+!python evalAnomaly.py --input "/content/eomt-anomaly-segmentation/data/Validation_Dataset/RoadAnomaly/images/*"
+
+# fs_static
+!python evalAnomaly.py --input "/content/eomt-anomaly-segmentation/data/Validation_Dataset/fs_static/images/*"
+
+# FS_LostFound_full
+!python evalAnomaly.py --input "/content/eomt-anomaly-segmentation/data/Validation_Dataset/FS_LostFound_full/images/*"
+```
+
+Results are saved to `eval/results.txt`.
+
+---
+
+## 8. ERFNet Baseline Results (MSP — Maximum Softmax Probability)
+
+| Dataset         | AUPRC  | FPR@TPR95 |
+|-----------------|--------|-----------|
+| RoadAnomaly21   | 38.32% | 59.34%    |
+
+These are the Step 6 baseline numbers to beat in subsequent steps.
+
+---
+
+## 9. Branch strategy
 
 | Branch | Purpose |
 |---|---|
@@ -145,7 +198,7 @@ drive.mount('/content/drive')
 
 ---
 
-## 9. Task ownership
+## 10. Task ownership
 
 | Task | Owner |
 |---|---|
@@ -156,10 +209,21 @@ drive.mount('/content/drive')
 
 ---
 
-## 10. Environment
+## 11. Environment
 
 - Python 3.10+ recommended
 - CUDA required for GPU training — use Google Colab (free T4 GPU)
 - W&B account required for training runs
 
+---
 
+## 12. Known Issues & Fixes
+
+| Issue | Cause | Fix |
+|---|---|---|
+| `cd: eval: No such file or directory` | Using `!cd` instead of `%cd`, or session reset cleared working dir | Always use `%cd /content/eomt-anomaly-segmentation` after session restart |
+| `FileNotFoundError: erfnet_pretrained.pth` | Running script from wrong directory | Run from inside `eval/` with `%cd /content/eomt-anomaly-segmentation/eval` |
+| `IsADirectoryError: Is a directory: '/'` | No `--input` argument passed, script uses hardcoded author path | Always pass `--input` with the correct dataset path |
+| `RuntimeError: expected input to have 3 channels, but got 1024` | Bug in original `evalAnomaly.py`: spurious `.permute(0,3,1,2)` line | Fixed in repo — `git pull` to get the fix |
+| `data/` only contains `.gitkeep` | Datasets not unzipped yet, or unzipped to wrong location | Run the unzip command with the full absolute path |
+| Zip extracts to `Validation_Dataset/` subfolder | Zip internal structure differs from what SETUP originally said | Use paths under `data/Validation_Dataset/` |
