@@ -1,0 +1,7 @@
+numpy
+matplotlib
+Pillow
+torchvision
+scikit-learn
+opencv-python
+ood-metrics
