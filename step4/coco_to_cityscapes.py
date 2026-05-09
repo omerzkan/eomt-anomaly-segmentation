@@ -139,7 +139,7 @@ COCO_LABEL_DICT = {
     "132": "rug-merged"
 }
 
-CITYSCAPE_TRAINID_DICT = {
+CITYSCAPE_TRAIN_ID_DICT = {
     0: 'road',
     1: 'sidewalk',
     2: 'building',
@@ -181,7 +181,7 @@ for coco_key, coco_val in COCO_LABEL_DICT.items():
     
     flag = True
     coco_val_list = coco_val.split("-")    
-    for city_key, city_val in CITYSCAPE_TRAINID_DICT.items():
+    for city_key, city_val in CITYSCAPE_TRAIN_ID_DICT.items():
         
         if(city_val in coco_val_list):
             coco_to_city_id_mapp[int(coco_key)] = city_key
@@ -197,10 +197,14 @@ for coco_key, coco_val in COCO_LABEL_DICT.items():
         coco_to_city_id_mapp[int(coco_key)] = IGNORED
 
 if __name__ == "__main__":
+    
     n_mapped = sum(1 for v in coco_to_city_id_mapp.values() if v != IGNORED)
     print(f"Mapped {n_mapped}/133 COCO classes\n")
-    for coco_id, cs_id in sorted(coco_to_city_id_mapp.items()):
-        if cs_id != IGNORED:
-            print(f"  {coco_id:3d} {COCO_LABEL_DICT[str(coco_id)]:25s} -> "
-                  f"{cs_id:2d} {CITYSCAPE_TRAINID_DICT[cs_id]}")
+    
+    for coco_id, city_id in sorted(coco_to_city_id_mapp.items()):
+        
+        if city_id != IGNORED:
+            
+            print(f"id:{coco_id}, label:{COCO_LABEL_DICT[str(coco_id)]} -> "
+                  f"id:{city_id}, label:{CITYSCAPE_TRAIN_ID_DICT[city_id]}")
             
