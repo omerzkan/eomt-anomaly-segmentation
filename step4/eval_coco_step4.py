@@ -37,9 +37,13 @@ IGNORE=255
 # Load the COCO-EoMT model from config and checkpoint
 with open(CONFIG_PATH, "r") as f:
     config = yaml.safe_load(f)
+    # with safe_load, it automatically converts the config to a dictionary, so we can access the values using keys
 
-print("Loading model from config and checkpoint...")
-print(config.keys())
+for key, value in config.items():
+    print(f"{key}: {value}")
+
+
+
 
 
 
