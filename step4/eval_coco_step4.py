@@ -352,9 +352,13 @@ with torch.no_grad():
         cs_pred = lookup[coco_pred]
 
         # ---- (e) Update the evaluator ------------------------------------------
-        # torchmetrics expects (pred, target) tensors of integer class IDs.
-        evaluator.update(cs_pred, gt)
+        # remap produced 255 (no Cityscapes equivalent) need to be skipped. We set the
+        # target to IGNORE for those pixels, which torchmetrics excludes via ignore_index.
+        # This is the LENIENT choice noted in section 6.
+        gt_for_eval = torch.where(cs_pred == IGNORE, torch.full_like(gt, IGNORE), gt)
+        cs_pred_for_eval = torch.where(cs_pred == IGNORE, torch.zeros_like(cs_pred), cs_pred)
 
+        evaluator.update(cs_pred_for_eval, gt_for_eval)
 
 #==================================
 # 8. RESULTS — print + save
