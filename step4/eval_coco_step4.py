@@ -194,38 +194,30 @@ def _build(d):
 
 
 #==================================
-# LOAD MODEL WEIGHTS FROM CHECKPOINT
-# NOTE: the lines below are currently inside _build() by indentation — they
-# should be at module level (no leading spaces).  Shown here as-is from source.
+# BUILD THE MODEL
 #==================================
 
-# torch.load reads the .bin file from disk into a Python dict.
-# map_location="cpu" ensures the tensors are first loaded onto CPU memory
-# even if they were saved from a GPU — avoids CUDA out-of-memory on load.
-# weights_only=False allows the file to contain non-tensor objects (e.g. configs).
-    checkpoints = torch.load(CHECKPOINT_PATH, map_location="cpu", weights_only=False)
+# Disable masked attention for faster inference (paper recommends this at eval time).
+# We mutate the config dict before building so the change propagates into the model.
+config['model']['init_args']['network']['init_args']['masked_attn_enabled'] = False
 
-    # Checkpoints are often saved as {'state_dict': {...}, 'epoch': 5, ...}.
-    # We only need the 'state_dict' sub-dict (the actual weight tensors).
-    # .get("state_dict", checkpoints) means: use 'state_dict' if the key exists,
-    # otherwise assume the whole file IS already a flat state_dict.
-    state_dict = checkpoints.get("state_dict", checkpoints)
+# Recursively build the actual PyTorch model object from the config blueprint.
+model = _build(config['model'])
+print(f"Model built: {type(model).__name__}")
 
-    # Copy the loaded weights into our model.
-    # strict=False means: don't crash if some keys are missing or extra —
-    # useful when fine-tuning on a new dataset where head layers differ.
-    # Returns two lists: keys that were expected but absent, and keys that
-    # were in the file but not in the model.
-    missing, unexpected = model.load_state_dict(state_dict, strict=False)
 
-    print(f"Loaded checkpoints. Missing keys: {len(missing)}, Unexpected keys: {len(unexpected)}")
+#==================================
+# LOAD MODEL WEIGHTS FROM CHECKPOINT
+#==================================
 
-    # model.eval() switches off training-specific layers:
-    #   • Dropout layers become pass-through (no random zeroing).
-    #   • BatchNorm uses its running statistics instead of the batch statistics.
-    # .to(DEVICE) moves all weight tensors to the GPU for fast inference.
-    model.eval().to(DEVICE)
+# Notice: ZERO indentation now — these are at module level, not inside _build.
+checkpoints = torch.load(CHECKPOINT_PATH, map_location="cpu", weights_only=False)
+state_dict = checkpoints.get("state_dict", checkpoints)
 
+missing, unexpected = model.load_state_dict(state_dict, strict=False)
+print(f"Loaded checkpoint. Missing keys: {len(missing)}, Unexpected keys: {len(unexpected)}")
+
+model.eval().to(DEVICE)
 
 #==================================
 # LOAD CITYSCAPES VALIDATION DATA
