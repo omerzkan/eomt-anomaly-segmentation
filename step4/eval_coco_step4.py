@@ -197,9 +197,14 @@ def _build(d):
 # BUILD THE MODEL
 #==================================
 
-# Disable masked attention for faster inference (paper recommends this at eval time).
-# We mutate the config dict before building so the change propagates into the model.
+IMG_SIZE = [640, 640]
+N_COCO_CLASSES = 133
+
+config['model']['init_args']['network']['init_args']['encoder']['init_args']['img_size'] = IMG_SIZE
+config['model']['init_args']['network']['init_args']['num_classes'] = N_COCO_CLASSES
 config['model']['init_args']['network']['init_args']['masked_attn_enabled'] = False
+config['model']['init_args']['img_size'] = IMG_SIZE
+config['model']['init_args']['num_classes'] = N_COCO_CLASSES
 
 # Recursively build the actual PyTorch model object from the config blueprint.
 model = _build(config['model'])
@@ -249,4 +254,135 @@ for coco_id, city_id in coco_to_city_id_map.items():
     lookup[coco_id] = city_id
 
 print(f"Mapped Classes: {(lookup != IGNORE).sum().item()}/133 COCO classes mapped to Cityscapes")
+
+#==================================
+# IOU EVALUATOR
+#==================================
+# Using torchmetrics' MulticlassJaccardIndex (standard mIoU implementation).
+# ignore_index=255 means pixels labelled 255 in EITHER prediction or ground truth
+# are excluded from the IoU computation.
+#
+# NOTE: This is the LENIENT evaluation choice — pixels where the COCO model
+# predicts a class that maps to 255 (no Cityscapes equivalent, e.g. "pizza")
+# are silently skipped. The STRICT alternative would count them as misses for
+# whatever GT class was at that pixel, which more honestly reflects the
+# class-set mismatch between COCO and Cityscapes.
+#
+# TODO (post-deadline improvement): Replace this with a custom IoUEval class
+# that implements the strict choice — see notes from earlier discussion.
+# For tonight, torchmetrics gives us a defensible standard-library number fast.
+
+from torchmetrics.classification import MulticlassJaccardIndex
+
+evaluator = MulticlassJaccardIndex(
+    num_classes=N_CITYSCAPES_CLASSES,
+    ignore_index=IGNORE,
+    average=None,   # return per-class IoU; we'll mean it ourselves
+).to(DEVICE)
+
+#==================================
+# 7. INFERENCE LOOP
+#==================================
+# For each Cityscapes val image:
+#   - Run the COCO-trained EoMT to get a 133-class semantic prediction
+#   - Remap COCO IDs to Cityscapes train IDs using our lookup tensor
+#   - Update the IoU evaluator with (cs_pred, ground_truth)
+#
+# After the loop, compute per-class IoU and the mean (mIoU).
+
+# torch.no_grad() turns off autograd globally — saves memory and speeds up
+# inference, since we don't need to compute gradients for evaluation.
+with torch.no_grad():
+
+    # tqdm wraps the loader and shows a progress bar (e.g. "243/500 [01:14<01:33]").
+    for imgs, targets in tqdm(val_loader, desc="COCO-EoMT eval"):
+
+        # ---- (a) Move data to GPU ----------------------------------------------
+        # imgs is a list of tensors (one per image in the batch). batch_size=1 here,
+        # so the list has length 1. Each tensor has shape (3, H, W).
+        # Move each tensor to GPU. (List comprehension; same idea as Lab 1.)
+        imgs = [img.to(DEVICE) for img in imgs]
+
+        # Each img has shape (3, H, W). We capture (H, W) for later — needed by
+        # the EoMT helpers that revert window-sized predictions back to full image.
+        img_sizes = [img.shape[-2:] for img in imgs]
+
+        # ---- (b) Build the GT per-pixel tensor ---------------------------------
+        # targets is a list of dicts (one per image), each dict has 'masks' + 'labels'.
+        # EoMT provides a helper that converts that to a per-pixel HxW tensor of
+        # train IDs (with 255 for ignored pixels).
+        gt = model.to_per_pixel_targets_semantic(targets, IGNORE)[0].to(DEVICE)
+
+        # ---- (c) Run the model -------------------------------------------------
+        # autocast(dtype=float16) uses mixed precision for speed.
+        # All these calls are EoMT helpers that come WITH the model object.
+        with autocast(dtype=torch.float16, device_type='cuda'):
+            # Split the image into square crops that fit the model's expected input
+            crops, origins = model.window_imgs_semantic(imgs)
+
+            # Forward pass — returns lists of (mask_logits, class_logits) per block
+            mask_logits_list, class_logits_list = model(crops)
+
+            # Take the FINAL block's outputs and upsample mask logits to model.img_size
+            mask_logits = F.interpolate(
+                mask_logits_list[-1], model.img_size, mode='bilinear'
+            )
+
+            # EoMT helper: combine mask logits + class logits into per-pixel logits
+            crop_logits = model.to_per_pixel_logits_semantic(
+                mask_logits, class_logits_list[-1]
+            )
+
+            # EoMT helper: stitch the crops back into full-image logits
+            logits = model.revert_window_logits_semantic(
+                crop_logits, origins, img_sizes
+            )
+
+            # logits[0] has shape (133, H, W). argmax over dim 0 picks the
+            # most likely COCO class for each pixel → HxW tensor of COCO class IDs.
+            coco_pred = logits[0].argmax(0)
+
+        # ---- (d) Remap COCO predictions to Cityscapes train IDs ----------------
+        # Fancy indexing: lookup[coco_pred] replaces every COCO id with the
+        # corresponding Cityscapes id (or 255 if no mapping).
+        cs_pred = lookup[coco_pred]
+
+        # ---- (e) Update the evaluator ------------------------------------------
+        # torchmetrics expects (pred, target) tensors of integer class IDs.
+        evaluator.update(cs_pred, gt)
+
+
+#==================================
+# 8. RESULTS — print + save
+#==================================
+# CS_NAMES is just for pretty-printing the per-class IoU table.
+CS_NAMES = ['road', 'sidewalk', 'building', 'wall', 'fence', 'pole',
+            'traffic light', 'traffic sign', 'vegetation', 'terrain',
+            'sky', 'person', 'rider', 'car', 'truck', 'bus', 'train',
+            'motorcycle', 'bicycle']
+
+# torchmetrics returns a tensor of length 19 (one IoU per class)
+per_class_iou = evaluator.compute().cpu().numpy()
+miou = float(per_class_iou.mean())
+
+print(f"\n========== COCO-EoMT on Cityscapes (class-remapped) ==========")
+print(f"mIoU: {miou * 100:.2f}\n")
+print(f"{'Class':<20} {'IoU (%)':>8}")
+print("-" * 30)
+for name, iou in zip(CS_NAMES, per_class_iou):
+    print(f"{name:<20} {iou * 100:>7.2f}")
+
+# Save results to JSON for the report
+results = {
+    'mIoU': miou,
+    'per_class': dict(zip(CS_NAMES, [float(x) for x in per_class_iou])),
+}
+out_path = '/content/drive/MyDrive/FAIMDL/step4_coco_results.json'
+with open(out_path, 'w') as f:
+    json.dump(results, f, indent=2)
+print(f"\nResults saved to {out_path}")
+
+
+
+
 
