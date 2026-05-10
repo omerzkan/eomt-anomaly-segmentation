@@ -175,7 +175,7 @@ SYNONYMS_COCO_TO_CITY = {
 
 IGNORED = 255
 
-coco_to_city_id_mapp = {}
+coco_to_city_id_map = {}
 
 for coco_key, coco_val in COCO_LABEL_DICT.items():
     
@@ -184,24 +184,24 @@ for coco_key, coco_val in COCO_LABEL_DICT.items():
     for city_key, city_val in CITYSCAPE_TRAIN_ID_DICT.items():
         
         if(city_val in coco_val_list):
-            coco_to_city_id_mapp[int(coco_key)] = city_key
+            coco_to_city_id_map[int(coco_key)] = city_key
             flag = False
             break
         
         if(SYNONYMS_COCO_TO_CITY.get(coco_val, "")==city_val):
-            coco_to_city_id_mapp[int(coco_key)] = city_key
+            coco_to_city_id_map[int(coco_key)] = city_key
             flag = False
             break
     
     if(flag):
-        coco_to_city_id_mapp[int(coco_key)] = IGNORED
+        coco_to_city_id_map[int(coco_key)] = IGNORED
 
 if __name__ == "__main__":
     
-    n_mapped = sum(1 for v in coco_to_city_id_mapp.values() if v != IGNORED)
+    n_mapped = sum(1 for v in coco_to_city_id_map.values() if v != IGNORED)
     print(f"Mapped {n_mapped}/133 COCO classes\n")
     
-    for coco_id, city_id in sorted(coco_to_city_id_mapp.items()):
+    for coco_id, city_id in sorted(coco_to_city_id_map.items()):
         
         if city_id != IGNORED:
             
