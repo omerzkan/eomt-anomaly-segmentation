@@ -200,16 +200,20 @@ def _build(d):
 IMG_SIZE = [640, 640]
 N_COCO_CLASSES = 133
 
+# Encoder (ViT) needs img_size
 config['model']['init_args']['network']['init_args']['encoder']['init_args']['img_size'] = IMG_SIZE
+
+# EoMT needs num_classes; turn off masked attention for inference speed
 config['model']['init_args']['network']['init_args']['num_classes'] = N_COCO_CLASSES
 config['model']['init_args']['network']['init_args']['masked_attn_enabled'] = False
+
+# MaskClassificationPanoptic (the wrapper) needs img_size, num_classes, stuff_classes
 config['model']['init_args']['img_size'] = IMG_SIZE
 config['model']['init_args']['num_classes'] = N_COCO_CLASSES
+config['model']['init_args']['stuff_classes'] = config['data']['init_args']['stuff_classes']
 
-# Recursively build the actual PyTorch model object from the config blueprint.
 model = _build(config['model'])
 print(f"Model built: {type(model).__name__}")
-
 
 #==================================
 # LOAD MODEL WEIGHTS FROM CHECKPOINT
