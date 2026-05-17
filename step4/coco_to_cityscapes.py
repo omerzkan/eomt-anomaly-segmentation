@@ -160,6 +160,7 @@ CITYSCAPE_TRAIN_ID_DICT = {
     17: 'motorcycle',
     18: 'bicycle',
 }
+
 """
 This is the trainid version of the cityscape labels, there is two type of ids, one is normal ids, and the other is trained ids. In the trained ids,
 there are some ids with 255 and we need to filter them. Also, we need to use train ids to map. Because train ids use in the training
