@@ -9,21 +9,27 @@ and then using the converted annotations for evaluation.
 """
 
 #==================================
+# INSERTING PATHS TO THE SYSTEM
+#==================================
+
+REPO = "/content/cloned_repo_feature_omer/eomt"
+# This is the path of the copied github repo in the google colab. 
+insert_path(repo_path=REPO, subdirs=None)
+
+
+#==================================
 # IMPORTS
 #==================================
 
 import os
 import torch
 from torchmetrics.classification import MulticlassJaccardIndex
-from utils.eomt_utils import DEVICE, IGNORE_INDEX, IMG_SIZE, N_CITYSCAPES_CLASSES
+from utils.eomt_utils import CITYSCAPES_CLASS_NAMES, DEVICE, IGNORE_INDEX, IMG_SIZE, N_CITYSCAPES_CLASSES
 from utils.eomt_utils import build_model, compare_result_iou, insert_path, print_results, semantic_inference, setup_seed, wandb_setup
 
 #==================================
 # CONFIGURATION & SETUP
 #==================================
-
-REPO = "/content/cloned_repo_feature_omer/eomt"
-# This is the path of the copied github repo in the google colab. 
 
 CONFIG_PATH_COCO_TRAINED = f"{REPO}/configs/dinov2/coco/panoptic/eomt_base_640_2x.yaml"
 CONFIG_PATH_CITYSCAPES_TRAINED = f"{REPO}/configs/dinov2/cityscapes/semantic/eomt_base_640.yaml"
@@ -42,7 +48,6 @@ os.chdir(REPO)
 # We change the directory to the REPO
 
 wandb_setup(enable=True)
-insert_path(repo_path=REPO, subdirs=None)
 setup_seed(seed=42)
 
 #==================================
@@ -55,7 +60,7 @@ data = CityscapesSemantic(
     path=DATA_PATH_CITYSCAPES_VALIDATION,
     batch_size=1,
     num_workers=2,
-    img_size=(640, 640)
+    img_size=IMG_SIZE
 )
 
 data.setup("validate")
