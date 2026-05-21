@@ -14,7 +14,7 @@ and then using the converted annotations for evaluation.
 
 import sys
 
-REPO = "/content/cloned_repo_feature_omer/eomt"
+REPO = "/content/cloned_repo_feature_omer"
 # This is the path of the copied github repo in the google colab. 
 sys.path.insert(0, REPO)
 
