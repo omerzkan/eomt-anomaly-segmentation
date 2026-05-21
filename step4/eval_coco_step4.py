@@ -57,7 +57,7 @@ setup_seed(seed=42)
 # LOAD CITYSCAPES VALIDATION DATA
 #==================================
 
-from datasets.cityscapes_semantic import CityscapesSemantic
+from eomt.datasets.cityscapes_semantic import CityscapesSemantic
 
 data = CityscapesSemantic(
     path=DATA_PATH_CITYSCAPES_VALIDATION,
