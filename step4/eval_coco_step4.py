@@ -12,9 +12,11 @@ and then using the converted annotations for evaluation.
 # INSERTING PATHS TO THE SYSTEM
 #==================================
 
+import sys
+
 REPO = "/content/cloned_repo_feature_omer/eomt"
 # This is the path of the copied github repo in the google colab. 
-insert_path(repo_path=REPO, subdirs=None)
+sys.path.insert(0, REPO)
 
 
 #==================================
@@ -47,6 +49,7 @@ DATA_PATH_CITYSCAPES_VALIDATION = "/content/drive/MyDrive/FAIMDL/data"
 os.chdir(REPO)
 # We change the directory to the REPO
 
+insert_path(repo_path=REPO, subdirs=None)
 wandb_setup(enable=True)
 setup_seed(seed=42)
 
