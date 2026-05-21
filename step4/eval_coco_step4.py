@@ -14,9 +14,10 @@ and then using the converted annotations for evaluation.
 
 import sys
 
-REPO = "/content/cloned_repo_feature_omer"
-# This is the path of the copied github repo in the google colab. 
-sys.path.insert(0, REPO)
+REPO_ROOT = "/content/cloned_repo_feature_omer"
+sys.path.insert(0, REPO_ROOT)
+REPO_EOMT = "/content/cloned_repo_feature_omer/eomt"
+sys.path.insert(0, REPO_EOMT)
 
 
 #==================================
@@ -33,8 +34,8 @@ from utils.eomt_utils import build_model, compare_result_iou, insert_path, print
 # CONFIGURATION & SETUP
 #==================================
 
-CONFIG_PATH_COCO_TRAINED = f"{REPO}/configs/dinov2/coco/panoptic/eomt_base_640_2x.yaml"
-CONFIG_PATH_CITYSCAPES_TRAINED = f"{REPO}/configs/dinov2/cityscapes/semantic/eomt_base_640.yaml"
+CONFIG_PATH_COCO_TRAINED = f"{REPO_EOMT}/configs/dinov2/coco/panoptic/eomt_base_640_2x.yaml"
+CONFIG_PATH_CITYSCAPES_TRAINED = f"{REPO_EOMT}/configs/dinov2/cityscapes/semantic/eomt_base_640.yaml"
 # Path to the YAML config that describes EoMT's architecture and training settings.
 # This particular config is for a ViT-Base backbone, 640px input, trained on COCO panoptic.
 
@@ -46,10 +47,10 @@ CHECKPOINT_PATH_CITYSCAPES_EOMT = "/content/drive/MyDrive/FAIMDL/checkpoints/eom
 DATA_PATH_CITYSCAPES_VALIDATION = "/content/drive/MyDrive/FAIMDL/data"
 # Root folder containing the dataset (images + annotations).
 
-os.chdir(REPO)
+os.chdir(REPO_ROOT)
 # We change the directory to the REPO
 
-insert_path(repo_path=REPO, subdirs=None)
+insert_path(repo_path=REPO_ROOT, subdirs=None)
 wandb_setup(enable=True)
 setup_seed(seed=42)
 
@@ -137,7 +138,7 @@ evaluator_coco_trained = semantic_inference(
 #==================================
 # 3-PRINT & SAVE RESULT
 #==================================
-coco_trained_result_json_path = f"{REPO}/results/step4/coco_trained_eomt_on_cityscapes_results.json"
+coco_trained_result_json_path = f"{REPO_ROOT}/results/step4/coco_trained_eomt_on_cityscapes_results.json"
 per_class_iou_coco_trained = evaluator_coco_trained.compute().cpu().numpy()
 print_results(model_name="COCO-trained EoMT", per_class_iou=per_class_iou_coco_trained, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=coco_trained_result_json_path)
 
@@ -193,7 +194,7 @@ evaluator_cityscapes_trained = semantic_inference(
 #==================================
 # 4-PRINT & SAVE RESULT
 #==================================
-cityscapes_trained_result_json_path = f"{REPO}/results/step4/cityscapes_trained_eomt_on_cityscapes_results.json"
+cityscapes_trained_result_json_path = f"{REPO_ROOT}/results/step4/cityscapes_trained_eomt_on_cityscapes_results.json"
 per_class_iou_cityscapes_trained = evaluator_cityscapes_trained.compute().cpu().numpy()
 print_results(model_name="CITYSCAPES-trained EoMT", per_class_iou=per_class_iou_cityscapes_trained, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=cityscapes_trained_result_json_path)
 
@@ -206,5 +207,5 @@ compare_result_iou(
     per_class_iou1=per_class_iou_coco_trained,
     per_class_iou2=per_class_iou_cityscapes_trained,
     class_names=CITYSCAPES_CLASS_NAMES,
-    save_json_path=f"{REPO}/results/step4/compare_results_coco_trained_vs_cityscapes_trained_on_cityscapes_dataset.json"
+    save_json_path=f"{REPO_ROOT}/results/step4/compare_results_coco_trained_vs_cityscapes_trained_on_cityscapes_dataset.json"
 )
