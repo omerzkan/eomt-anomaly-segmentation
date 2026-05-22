@@ -17,6 +17,7 @@ import sys
 REPO_EOMT = "/content/cloned_repo_feature_omer/eomt"
 REPO_ROOT = "/content/cloned_repo_feature_omer"
 
+sys.path.insert(0, REPO_ROOT)
 sys.path.insert(0, REPO_EOMT)
 
 
@@ -47,7 +48,7 @@ CHECKPOINT_PATH_CITYSCAPES_EOMT = "/content/drive/MyDrive/FAIMDL/checkpoints/eom
 DATA_PATH_CITYSCAPES_VALIDATION = "/content/drive/MyDrive/FAIMDL/data"
 # Root folder containing the dataset (images + annotations).
 
-insert_path(repo_path=REPO_ROOT, subdirs=None)
+#insert_path(repo_path=REPO_ROOT, subdirs=None)
 
 os.chdir(REPO_ROOT)
 # We change the directory to the REPO
