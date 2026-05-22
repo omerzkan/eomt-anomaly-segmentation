@@ -132,6 +132,9 @@ def build_model(config_path, eval_mode=False, config_overriders=None, sanity_che
     
     if checkpoint_path is not None:
         import torch
+        import math
+        import torch.nn.functional as F
+        
         checkpoints = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
         # we loaded to the cpu, then we move to the cuda
         # We loaded the extra code too, as we told that weights_only=False.
@@ -139,6 +142,63 @@ def build_model(config_path, eval_mode=False, config_overriders=None, sanity_che
         # we loaded the extra code because we trust the our TAs drive.
         state_dict = checkpoints.get("state_dict", checkpoints)
         # It tries to get the state dict if it is not availabe returns the checkpoints
+        
+        # Handle pos_embed size mismatch by interpolating
+        try:
+            ck_pos_key = None
+            for k in list(state_dict.keys()):
+                if "pos_embed" in k:
+                    ck_pos_key = k
+                    break
+            
+            model_pos_key = None
+            for name, param in model.named_parameters():
+                if "pos_embed" in name:
+                    model_pos_key = name
+                    break
+            
+            if ck_pos_key is not None and model_pos_key is not None:
+                ck_pos = state_dict[ck_pos_key]
+                model_pos = dict(model.named_parameters())[model_pos_key]
+                
+                if ck_pos.shape != model_pos.shape:
+                    ck_len = ck_pos.shape[1]
+                    mdl_len = model_pos.shape[1]
+                    
+                    def get_grid_size(n):
+                        # Handle both cases: pure grid or grid + cls token
+                        s = int(math.sqrt(n))
+                        if s * s == n:
+                            return s, False  # pure grid, no cls token
+                        s = int(math.sqrt(n - 1))
+                        if s * s == (n - 1):
+                            return s, True  # grid + cls token
+                        return None, None
+                    
+                    ck_g, ck_has_cls = get_grid_size(ck_len)
+                    mdl_g, mdl_has_cls = get_grid_size(mdl_len)
+                    
+                    if ck_g is not None and mdl_g is not None:
+                        # Extract and interpolate grid part
+                        if ck_has_cls:
+                            ck_cls, ck_grid = ck_pos[:, :1, :], ck_pos[:, 1:, :]
+                        else:
+                            ck_cls, ck_grid = None, ck_pos
+                        
+                        dim = ck_grid.shape[2]
+                        ck_grid_reshaped = ck_grid.reshape(1, ck_g, ck_g, dim).permute(0, 3, 1, 2)
+                        ck_grid_interp = F.interpolate(ck_grid_reshaped, size=(mdl_g, mdl_g), mode='bicubic', align_corners=False)
+                        ck_grid_interp = ck_grid_interp.permute(0, 2, 3, 1).reshape(1, mdl_g * mdl_g, dim)
+                        
+                        if ck_cls is not None:
+                            new_pos = torch.cat([ck_cls, ck_grid_interp], dim=1)
+                        else:
+                            new_pos = ck_grid_interp
+                        
+                        state_dict[ck_pos_key] = new_pos
+        except Exception as e:
+            pass  # If interpolation fails, let load_state_dict raise the original error
+        
         missing, unexpected = model.load_state_dict(state_dict, strict=False)
         # strict=False means that we will not raise an error if there are missing keys or unexpected keys in the state dict.
         

@@ -64,7 +64,7 @@ data = CityscapesSemantic(
     path=DATA_PATH_CITYSCAPES_VALIDATION,
     batch_size=1,
     num_workers=2,
-    img_size=[640, 640]
+    img_size=[896, 896]
 )
 
 data.setup("validate")
@@ -93,7 +93,7 @@ print("\n***************** COCO TRAINED EOMT EVALUATION ON CITYSCAPES DATASET **
 # 1-BUILD THE MODEL
 #==================================
 
-IMG_SIZE_COCO = [640, 640]
+IMG_SIZE_COCO = [896, 896]
 N_COCO_CLASSES = 133
 STUFF_CLASSES_COCO = [80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132]
 overriders_coco_trained= {
