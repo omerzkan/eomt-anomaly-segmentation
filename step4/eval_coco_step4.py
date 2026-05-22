@@ -149,8 +149,12 @@ evaluator_coco_trained = semantic_inference(
 coco_trained_result_json_path = f"{REPO_ROOT}/results/step4/coco_trained_eomt_on_cityscapes_results.json"
 per_class_iou_coco_trained = evaluator_coco_trained.compute().cpu().numpy()
 
-df_coco = print_results(model_name="COCO-trained EoMT", per_class_iou=per_class_iou_coco_trained, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=coco_trained_result_json_path)
-print(df_coco)
+df_miou_coco, df_iou_per_class_coco = print_results(model_name="COCO-trained EoMT", per_class_iou=per_class_iou_coco_trained, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=coco_trained_result_json_path)
+
+print("\n")
+print(df_miou_coco)
+print("\n")
+print(df_iou_per_class_coco)
 
 """
 ***************** CITYSCAPES TRAINED EOMT EVALUATION ON CITYSCAPES DATASET *****************
@@ -210,13 +214,16 @@ evaluator_cityscapes_trained = semantic_inference(
 cityscapes_trained_result_json_path = f"{REPO_ROOT}/results/step4/cityscapes_trained_eomt_on_cityscapes_results.json"
 per_class_iou_cityscapes_trained = evaluator_cityscapes_trained.compute().cpu().numpy()
 
-df_cityscapes = print_results(model_name="CITYSCAPES-trained EoMT", per_class_iou=per_class_iou_cityscapes_trained, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=cityscapes_trained_result_json_path)
-print(df_cityscapes)
+df_miou_cityscapes, df_iou_per_class_cityscapes = print_results(model_name="CITYSCAPES-trained EoMT", per_class_iou=per_class_iou_cityscapes_trained, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=cityscapes_trained_result_json_path)
+print("\n")
+print(df_miou_cityscapes)
+print("\n")
+print(df_iou_per_class_cityscapes)
 
 """
 ***************** COMPARE & SAVE RESULTS FOR CITYSCAPES-TRAINED-EOMT vs COCO-TRAINED-EOMT EVALUATION ON CITYSCAPES DATASET *****************
 """
-compare_result_iou(
+df_miou_compare, df_iou_per_class_compare = compare_result_iou(
     "COCO-trained EoMT", 
     "CITYSCAPES-trained EoMT",
     per_class_iou1=per_class_iou_coco_trained,
@@ -224,3 +231,8 @@ compare_result_iou(
     class_names=CITYSCAPES_CLASS_NAMES,
     save_json_path=f"{REPO_ROOT}/results/step4/compare_results_coco_trained_vs_cityscapes_trained_on_cityscapes_dataset.json"
 )
+
+print("\n")
+print(df_miou_compare)
+print("\n")
+print(df_iou_per_class_compare)

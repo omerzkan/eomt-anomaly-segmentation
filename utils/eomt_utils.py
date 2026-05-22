@@ -230,15 +230,20 @@ def print_results(model_name, per_class_iou=None, class_names=None, save_json_pa
     per_class_iou_array = np.asarray(per_class_iou)
     miou = float(per_class_iou.mean())
     
-    df = pd.DataFrame({
+    df_miou = pd.DataFrame({
+        "model name": model_name,
+        "iou_percentage": (miou*100).tolist()
+    })    
+    df_iou_per_class = pd.DataFrame({
         "class": list(class_names),
-        "iou": per_class_iou_array.tolist(),
         "iou_percentage": (per_class_iou_array*100).tolist()
     })
     
+  
+    print(f"Results for {model_name}:\n")
+    print(f"========== {model_name} ==========\n")
+    
     """
-    print(f"Results for {model_name}:")
-    print(f"\n========== {model_name} ==========")
     print(f"mIoU: {miou * 100}\n")
     print(f"{'Class':<20} {'IoU (%)':>8}")
     print("-" * 30)
@@ -254,18 +259,32 @@ def print_results(model_name, per_class_iou=None, class_names=None, save_json_pa
     if save_json_path is not None:
         with open(save_json_path, 'w') as f:
             json.dump(results, f, indent=2)
-        print(f"\nResults saved to {save_json_path}")
+        print(f"\nResults saved to {save_json_path}\n")
 
-    return df
+    return df_miou, df_iou_per_class
 
 def compare_result_iou(model_name1, model_name2, per_class_iou1=None, per_class_iou2=None, class_names=None, save_json_path=None):
     
     import json
-
+    import pandas as pd
+    import numpy as np
+    
     miou1 = float(per_class_iou1.mean())
     miou2 = float(per_class_iou2.mean())
-
-    print(f"\n========== Comparison: {model_name1} vs {model_name2} ==========")
+    
+    df_miou = pd.DataFrame({
+        f'miou_{model_name1}': miou1,
+        f'miou_{model_name2}': miou2
+    })
+    
+    df_iou_per_class = pd.DataFrame({
+        'class': list(class_names),
+        f'iou_{model_name1}_pct': (per_class_iou1 * 100).tolist(),
+        f'iou_{model_name2}_pct': (per_class_iou2 * 100).tolist(),
+    })
+    
+    print(f"\n========== Comparison: {model_name1} vs {model_name2} ==========\n")
+    """
     print(f"{'ModelName':<20} {model_name1:>8} {model_name2:>8}")
     print("-" * 30)
     print(f"{'mIoU':<20}: {miou1 * 100:>8} {miou2 * 100:>8}\n")
@@ -274,7 +293,8 @@ def compare_result_iou(model_name1, model_name2, per_class_iou1=None, per_class_
     print("-" * 30)
     for name, iou1, iou2 in zip(class_names, per_class_iou1, per_class_iou2):
         print(f"{name:<20} {iou1 * 100:>7.2f} {iou2 * 100:>7.2f}")
-
+    """
+    
     # Save results to JSON for the report
     results = {
         f'mIoU {model_name1}': miou1,
@@ -286,4 +306,6 @@ def compare_result_iou(model_name1, model_name2, per_class_iou1=None, per_class_
     if save_json_path is not None:    
         with open(save_json_path, 'w') as f:
             json.dump(results, f, indent=2)
-        print(f"\nResults saved to {save_json_path}")
+        print(f"\nResults saved to {save_json_path}\n")
+        
+    return df_miou, df_iou_per_class
