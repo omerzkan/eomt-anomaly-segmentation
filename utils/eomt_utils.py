@@ -162,7 +162,7 @@ def semantic_inference(model, dataloader, remap_function=None, evaluator=None, d
             imgs = [img.to(device) for img in imgs]
             img_sizes = [img.shape[-2: ] for img in imgs]
             
-            ground_truth = model.to_per_pixel_targets_semantic(targets, IGNORE_INDEX=IGNORE_INDEX)[0].to(device)
+            ground_truth = model.to_per_pixel_targets_semantic(targets, ignore_idx=IGNORE_INDEX)[0].to(device)
             
             with autocast(dtype=torch.float16, device_type="cuda"):
                 
