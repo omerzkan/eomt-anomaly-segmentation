@@ -9,26 +9,24 @@ and then using the converted annotations for evaluation.
 """
 
 #==================================
+# INSERTING PATHS TO THE SYSTEM
+#==================================
+import sys
+REPO_ROOT = "/content/cloned_repo_feature_omer"
+sys.path.insert(0, REPO_ROOT)
+REPO_EOMT = "/content/cloned_repo_feature_omer/eomt"
+sys.path.insert(0, REPO_EOMT)
+
+
+#==================================
 # IMPORTS
 #==================================
 
-
-import sys
 import os
 import torch
 from torchmetrics.classification import MulticlassJaccardIndex
 from utils.eomt_utils import CITYSCAPES_CLASS_NAMES, DEVICE, IGNORE_INDEX, N_CITYSCAPES_CLASSES
-from utils.eomt_utils import build_model, compare_result_iou, print_results, semantic_inference, setup_seed, wandb_setup
-
-#==================================
-# INSERTING PATHS TO THE SYSTEM
-#==================================
-
-REPO_EOMT = "/content/cloned_repo_feature_omer/eomt"
-REPO_ROOT = "/content/cloned_repo_feature_omer"
-
-sys.path.insert(0, REPO_ROOT)
-sys.path.insert(0, REPO_EOMT)
+from utils.eomt_utils import build_model, compare_result_iou, print_results, insert_path, semantic_inference, setup_seed, wandb_setup
 
 #==================================
 # CONFIGURATION & SETUP
@@ -46,6 +44,7 @@ CHECKPOINT_PATH_CITYSCAPES_EOMT = "/content/drive/MyDrive/FAIMDL/checkpoints/eom
 
 DATA_PATH_CITYSCAPES_VALIDATION = "/content/drive/MyDrive/FAIMDL/data"
 # Root folder containing the dataset (images + annotations).
+
 
 #insert_path(repo_path=REPO_ROOT, subdirs=None)
 
@@ -65,7 +64,7 @@ data = CityscapesSemantic(
     path=DATA_PATH_CITYSCAPES_VALIDATION,
     batch_size=1,
     num_workers=2,
-    img_size=IMG_SIZE
+    img_size=[640, 640]
 )
 
 data.setup("validate")
