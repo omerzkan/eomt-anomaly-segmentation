@@ -209,10 +209,10 @@ def semantic_inference(model, dataloader, remap_function=None, evaluator=None, d
                     (pred >= 0) &
                     (pred < N_CITYSCAPES_CLASSES)
                 )
-                print("==================================")
-                print("SANITY CHECK: PRED & GT SHAPE CHECK AFTER MASKING WITH VALID INDEXES")
-                print("==================================\n")
-                print("pred shape:", pred[valid_mask].shape, "gt shape:", ground_truth[valid_mask].shape)
+                #print("==================================")
+                #print("SANITY CHECK: PRED & GT SHAPE CHECK AFTER MASKING WITH VALID INDEXES")
+                #print("==================================\n")
+                #print("pred shape:", pred[valid_mask].shape, "gt shape:", ground_truth[valid_mask].shape)
                 
                 evaluator.update(pred[valid_mask], ground_truth[valid_mask])
         

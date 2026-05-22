@@ -30,13 +30,13 @@ trained_models/*.pt
 !trained_models/.gitkeep
 
 # Results and outputs — generated files
-results/*
 !results/.gitkeep
 outputs/
 *.txt
 !eval/requirements.txt
 !eval/README.md
 !eomt/requirements.txt
+!results/step4
 
 # Jupyter
 .ipynb_checkpoints/
