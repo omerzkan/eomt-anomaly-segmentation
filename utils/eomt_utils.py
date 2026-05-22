@@ -189,6 +189,23 @@ def semantic_inference(model, dataloader, remap_function=None, evaluator=None, d
                 pred = remap_function(pred)
                 
             if evaluator is not None:
+                
+                unique_pred = torch.unique(pred)
+                unique_gt = torch.unique(ground_truth)
+                
+                print("DEBUG pred unique", unique_pred)
+                print("DEBUG gt unique", unique_gt)
+                
+                if unique_pred.numel() > 0:
+                    print("DEBUG pred max:", unique_pred.max().item(), "min:", unique_pred.min().item())
+                    print("DEBUG pred out-of-range:", unique_pred[unique_pred >= 19])
+
+                if unique_gt.numel() > 0:
+                    print("DEBUG gt max:", unique_gt.max().item(), "min:", unique_gt.min().item())
+                    print("DEBUG gt out-of-range:", unique_gt[unique_gt >= 19])
+
+                print("DEBUG pred shape:", pred.shape, "gt shape:", ground_truth.shape)
+                
                 evaluator.update(pred, ground_truth)
         
                 
