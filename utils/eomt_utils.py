@@ -52,7 +52,10 @@ def read_yaml_config(config_path, sanity_check=False):
     
     # Sanity check: print the config dict
     if sanity_check:
-        print("Sanity Check: This is the loaded config file")
+        print("==================================")
+        print("SANITY CHECK: READ YAML FILE - SEE THE DICT")
+        print("==================================\n")
+        print("Sanity Check: This is the loaded config file\n")
         for key, value in config_dict.items():
             print(f"{key}:{value}\n")
     
@@ -112,15 +115,21 @@ def build_model(config_path, eval_mode=False, config_overriders=None, sanity_che
         
         # Sanity check: print the updated config dict
         if sanity_check:
-            print("Sanity Check: This is the updated config dict")
+            print("==================================")
+            print("SANITY CHECK: UPDATED CONFIG FILE")
+            print("==================================\n")
+            print("Sanity Check: This is the updated config dict\n")
             for key, value in config_dict.items():
                 print(f"{key}:{value}\n")
     
     model = _build_helper(config_dict["model"])
     
     if sanity_check:
+        print("==================================")
+        print("SANITY CHECK: BUILT MODEL")
+        print("==================================\n")
         print("Sanity Check: This is the built model")
-        print(f"{type(model).__name__}")
+        print(f"{type(model).__name__}\n")
     
     if checkpoint_path is not None:
         import torch
@@ -135,9 +144,11 @@ def build_model(config_path, eval_mode=False, config_overriders=None, sanity_che
         # strict=False means that we will not raise an error if there are missing keys or unexpected keys in the state dict.
         
         if sanity_check:
+            print("==================================")
+            print("SANITY CHECK: CHECKPOINT LOADING RESULT")
+            print("==================================\n")
             print("Sanity Check: This is the checkpoint loading result")
-            print(f"Missing keys: {missing}")
-            print(f"Unexpected keys: {unexpected}")
+            print(f"Missing keys: {missing}, Unexpected keys: {unexpected}\n")
     
     model.to(device)
     
@@ -190,23 +201,20 @@ def semantic_inference(model, dataloader, remap_function=None, evaluator=None, d
                 
             if evaluator is not None:
                 
-                unique_pred = torch.unique(pred)
-                unique_gt = torch.unique(ground_truth)
+                valid_mask = (
+                    (ground_truth != IGNORE_INDEX) &
+                    (pred != IGNORE_INDEX) &
+                    (ground_truth >= 0) &
+                    (ground_truth < N_CITYSCAPES_CLASSES) &
+                    (pred >= 0) &
+                    (pred < N_CITYSCAPES_CLASSES)
+                )
+                print("==================================")
+                print("SANITY CHECK: PRED & GT SHAPE CHECK AFTER MASKING WITH VALID INDEXES")
+                print("==================================\n")
+                print("pred shape:", pred[valid_mask].shape, "gt shape:", ground_truth[valid_mask].shape)
                 
-                print("DEBUG pred unique", unique_pred)
-                print("DEBUG gt unique", unique_gt)
-                
-                if unique_pred.numel() > 0:
-                    print("DEBUG pred max:", unique_pred.max().item(), "min:", unique_pred.min().item())
-                    print("DEBUG pred out-of-range:", unique_pred[unique_pred >= 19])
-
-                if unique_gt.numel() > 0:
-                    print("DEBUG gt max:", unique_gt.max().item(), "min:", unique_gt.min().item())
-                    print("DEBUG gt out-of-range:", unique_gt[unique_gt >= 19])
-
-                print("DEBUG pred shape:", pred.shape, "gt shape:", ground_truth.shape)
-                
-                evaluator.update(pred, ground_truth)
+                evaluator.update(pred[valid_mask], ground_truth[valid_mask])
         
                 
 

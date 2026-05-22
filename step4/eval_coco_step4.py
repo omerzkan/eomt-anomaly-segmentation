@@ -126,6 +126,9 @@ lookup = torch.full((133,), IGNORE_INDEX, dtype=torch.long, device=DEVICE)
 for coco_id, city_id in coco_to_city_id_map.items():
     lookup[coco_id] = city_id
 
+print("==================================")
+print("SANITY CHECK: REMAPPING RESULT")
+print("==================================\n")
 print(f"Mapped Classes: {(lookup != IGNORE_INDEX).sum().item()}/133 COCO classes mapped to Cityscapes")
 
 evaluator_coco_trained = semantic_inference(
