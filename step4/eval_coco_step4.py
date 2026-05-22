@@ -148,7 +148,9 @@ evaluator_coco_trained = semantic_inference(
 #==================================
 coco_trained_result_json_path = f"{REPO_ROOT}/results/step4/coco_trained_eomt_on_cityscapes_results.json"
 per_class_iou_coco_trained = evaluator_coco_trained.compute().cpu().numpy()
-print_results(model_name="COCO-trained EoMT", per_class_iou=per_class_iou_coco_trained, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=coco_trained_result_json_path)
+
+df_coco = print_results(model_name="COCO-trained EoMT", per_class_iou=per_class_iou_coco_trained, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=coco_trained_result_json_path)
+print(df_coco)
 
 """
 ***************** CITYSCAPES TRAINED EOMT EVALUATION ON CITYSCAPES DATASET *****************
@@ -207,7 +209,9 @@ evaluator_cityscapes_trained = semantic_inference(
 #==================================
 cityscapes_trained_result_json_path = f"{REPO_ROOT}/results/step4/cityscapes_trained_eomt_on_cityscapes_results.json"
 per_class_iou_cityscapes_trained = evaluator_cityscapes_trained.compute().cpu().numpy()
-print_results(model_name="CITYSCAPES-trained EoMT", per_class_iou=per_class_iou_cityscapes_trained, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=cityscapes_trained_result_json_path)
+
+df_cityscapes = print_results(model_name="CITYSCAPES-trained EoMT", per_class_iou=per_class_iou_cityscapes_trained, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=cityscapes_trained_result_json_path)
+print(df_cityscapes)
 
 """
 ***************** COMPARE & SAVE RESULTS FOR CITYSCAPES-TRAINED-EOMT vs COCO-TRAINED-EOMT EVALUATION ON CITYSCAPES DATASET *****************

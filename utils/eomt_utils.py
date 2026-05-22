@@ -224,17 +224,27 @@ def semantic_inference(model, dataloader, remap_function=None, evaluator=None, d
 def print_results(model_name, per_class_iou=None, class_names=None, save_json_path=None):
     
     import json
-
-    print(f"Results for {model_name}:")
+    import pandas as pd
+    import numpy as np
+    
+    per_class_iou_array = np.asarray(per_class_iou)
     miou = float(per_class_iou.mean())
-
+    
+    df = pd.DataFrame({
+        "class": list(class_names),
+        "iou": per_class_iou_array.tolist(),
+        "iou_percentage": (per_class_iou_array*100).tolist()
+    })
+    
+    """
+    print(f"Results for {model_name}:")
     print(f"\n========== {model_name} ==========")
     print(f"mIoU: {miou * 100}\n")
     print(f"{'Class':<20} {'IoU (%)':>8}")
     print("-" * 30)
     for name, iou in zip(class_names, per_class_iou):
         print(f"{name:<20} {iou * 100:>7.2f}")
-
+    """
     # Save results to JSON for the report
     results = {
         'mIoU': miou,
@@ -245,6 +255,8 @@ def print_results(model_name, per_class_iou=None, class_names=None, save_json_pa
         with open(save_json_path, 'w') as f:
             json.dump(results, f, indent=2)
         print(f"\nResults saved to {save_json_path}")
+
+    return df
 
 def compare_result_iou(model_name1, model_name2, per_class_iou1=None, per_class_iou2=None, class_names=None, save_json_path=None):
     
