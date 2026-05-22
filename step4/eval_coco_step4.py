@@ -167,7 +167,7 @@ evaluator.reset()
 #==================================
 # 2-BUILD THE MODEL
 #==================================
-IMG_SIZE_CITYSCAPE = [896, 896]
+IMG_SIZE_CITYSCAPE = [1024,1024]
 overriders_cityscapes_trained = {
     ('model', 'init_args', 'network', 'init_args', 'encoder', 'init_args', 'img_size'): IMG_SIZE_CITYSCAPE,
     ('model', 'init_args', 'network', 'init_args', 'num_classes'): N_CITYSCAPES_CLASSES,  # 19, not 133
