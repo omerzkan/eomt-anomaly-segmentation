@@ -3,7 +3,6 @@ import importlib
 import sys, os
 
 
-IMG_SIZE = [640, 640]
 DEVICE = "cuda"
 N_CITYSCAPES_CLASSES = 19
 IGNORE_INDEX = 255

@@ -9,27 +9,26 @@ and then using the converted annotations for evaluation.
 """
 
 #==================================
-# INSERTING PATHS TO THE SYSTEM
+# IMPORTS
 #==================================
 
+
 import sys
+import os
+import torch
+from torchmetrics.classification import MulticlassJaccardIndex
+from utils.eomt_utils import CITYSCAPES_CLASS_NAMES, DEVICE, IGNORE_INDEX, N_CITYSCAPES_CLASSES
+from utils.eomt_utils import build_model, compare_result_iou, print_results, semantic_inference, setup_seed, wandb_setup
+
+#==================================
+# INSERTING PATHS TO THE SYSTEM
+#==================================
 
 REPO_EOMT = "/content/cloned_repo_feature_omer/eomt"
 REPO_ROOT = "/content/cloned_repo_feature_omer"
 
 sys.path.insert(0, REPO_ROOT)
 sys.path.insert(0, REPO_EOMT)
-
-
-#==================================
-# IMPORTS
-#==================================
-
-import os
-import torch
-from torchmetrics.classification import MulticlassJaccardIndex
-from utils.eomt_utils import CITYSCAPES_CLASS_NAMES, DEVICE, IGNORE_INDEX, IMG_SIZE, N_CITYSCAPES_CLASSES
-from utils.eomt_utils import build_model, compare_result_iou, insert_path, print_results, semantic_inference, setup_seed, wandb_setup
 
 #==================================
 # CONFIGURATION & SETUP
@@ -89,19 +88,20 @@ evaluator = MulticlassJaccardIndex(
 """
 ***************** COCO TRAINED EOMT EVALUATION ON CITYSCAPES DATASET *****************
 """
+print("\n***************** COCO TRAINED EOMT EVALUATION ON CITYSCAPES DATASET *****************\n")
 
 #==================================
 # 1-BUILD THE MODEL
 #==================================
 
-
+IMG_SIZE_COCO = [640, 640]
 N_COCO_CLASSES = 133
 STUFF_CLASSES_COCO = [80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132]
 overriders_coco_trained= {
-    ('model', 'init_args', "network", "init_args", "encoder", "init_args", 'img_size'): IMG_SIZE,
+    ('model', 'init_args', "network", "init_args", "encoder", "init_args", 'img_size'): IMG_SIZE_COCO,
     ('model', 'init_args', "network", "init_args", "num_classes"): N_COCO_CLASSES,
     ('model', 'init_args', "network", "init_args", "masked_attn_enabled"): False,
-    ('model', 'init_args', "img_size"): IMG_SIZE,
+    ('model', 'init_args', "img_size"): IMG_SIZE_COCO,
     ('model', 'init_args', "num_classes"): N_COCO_CLASSES,
     ('model', 'init_args', "stuff_classes"): STUFF_CLASSES_COCO
 }
@@ -131,6 +131,10 @@ print("SANITY CHECK: REMAPPING RESULT")
 print("==================================\n")
 print(f"Mapped Classes: {(lookup != IGNORE_INDEX).sum().item()}/133 COCO classes mapped to Cityscapes")
 
+
+print("\n==================================")
+print("SANITY CHECK: EVALUATION START")
+print("==================================\n")
 evaluator_coco_trained = semantic_inference(
     model=model_coco_trained, 
     dataloader=val_loader, 
@@ -150,7 +154,7 @@ print_results(model_name="COCO-trained EoMT", per_class_iou=per_class_iou_coco_t
 """
 ***************** CITYSCAPES TRAINED EOMT EVALUATION ON CITYSCAPES DATASET *****************
 """
-
+print("\n***************** CITYSCAPES TRAINED EOMT EVALUATION ON CITYSCAPES DATASET *****************\n")
 #==================================
 # 1-RESET EVALUATOR & GPU CACHE
 #==================================
@@ -164,12 +168,12 @@ evaluator.reset()
 #==================================
 # 2-BUILD THE MODEL
 #==================================
-
+IMG_SIZE_CITYSCAPE = [896, 896]
 overriders_cityscapes_trained = {
-    ('model', 'init_args', 'network', 'init_args', 'encoder', 'init_args', 'img_size'): IMG_SIZE,
+    ('model', 'init_args', 'network', 'init_args', 'encoder', 'init_args', 'img_size'): IMG_SIZE_CITYSCAPE,
     ('model', 'init_args', 'network', 'init_args', 'num_classes'): N_CITYSCAPES_CLASSES,  # 19, not 133
     ('model', 'init_args', 'network', 'init_args', 'masked_attn_enabled'): False,
-    ('model', 'init_args', 'img_size'): IMG_SIZE,
+    ('model', 'init_args', 'img_size'): IMG_SIZE_CITYSCAPE,
     ('model', 'init_args', 'num_classes'): N_CITYSCAPES_CLASSES,  # 19
 }
 
@@ -187,6 +191,9 @@ model_cityscapes_trained = build_model(
 # 3-INFERENCE LOOP
 #==================================
 
+print("\n==================================")
+print("SANITY CHECK: EVALUATION START")
+print("==================================\n")
 evaluator_cityscapes_trained = semantic_inference(
     model=model_cityscapes_trained, 
     dataloader=val_loader, 

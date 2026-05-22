@@ -10,6 +10,7 @@ It evaluates the performance of both models on the Cityscapes validation set and
 # IMPORTS
 #==================================
 
+import sys
 import os
 from torchmetrics.classification import MulticlassJaccardIndex
 from utils.eomt_utils import CITYSCAPES_CLASS_NAMES, DEVICE, IGNORE_INDEX, IMG_SIZE, N_CITYSCAPES_CLASSES
@@ -18,13 +19,23 @@ import json
 import numpy as np
 
 #==================================
+# INSERTING PATHS TO THE SYSTEM
+#==================================
+
+REPO_EOMT = "/content/cloned_repo_feature_omer/eomt"
+REPO_ROOT = "/content/cloned_repo_feature_omer"
+
+sys.path.insert(0, REPO_ROOT)
+sys.path.insert(0, REPO_EOMT)
+
+#==================================
 # CONFIGURATION & SETUP
 #==================================
 
 REPO = "/content/cloned_repo_feature_omer/eomt"
 # This is the path of the copied github repo in the google colab. 
 
-CONFIG_PATH_CITYSCAPES_TRAINED = f"{REPO}/configs/dinov2/cityscapes/semantic/eomt_base_640.yaml"
+CONFIG_PATH_CITYSCAPES_TRAINED = f"{REPO_EOMT}/configs/dinov2/cityscapes/semantic/eomt_base_640.yaml"
 # Path to the YAML config that describes EoMT's architecture and training settings.
 
 DATA_PATH_CITYSCAPES_VALIDATION = "/content/drive/MyDrive/FAIMDL/data"
@@ -32,18 +43,17 @@ DATA_PATH_CITYSCAPES_VALIDATION = "/content/drive/MyDrive/FAIMDL/data"
 
 CHECKPOINT_PATH_COCO_FINETUNED_ON_CITYSCAPES = "/content/drive/MyDrive/FAIMDL/checkpoints/coco_eomt_finetuned_on_cityscapes.bin"
 
-os.chdir(REPO)
+os.chdir(REPO_ROOT)
 # We change the directory to the REPO
 
 wandb_setup(enable=True)
-insert_path(repo_path=REPO, subdirs=None)
 setup_seed(seed=42)
 
 #==================================
 # LOAD CITYSCAPES VALIDATION DATA
 #==================================
 
-from datasets.cityscapes_semantic import CityscapesSemantic
+from eomt.datasets.cityscapes_semantic import CityscapesSemantic
 
 data = CityscapesSemantic(
     path=DATA_PATH_CITYSCAPES_VALIDATION,
@@ -111,7 +121,7 @@ evaluator_coco_finetuned_on_cityscapes = semantic_inference(
 #==================================
 # 3-PRINT & SAVE RESULT
 #==================================
-result_json_path_coco_finetuned_on_cityscapes = f"{REPO}/results/step5/coco_finetuned_on_cityscapes_results.json"
+result_json_path_coco_finetuned_on_cityscapes = f"{REPO_ROOT}/results/step5/coco_finetuned_on_cityscapes_results.json"
 per_class_iou_coco_finetuned_on_cityscapes = evaluator_coco_finetuned_on_cityscapes.compute().cpu().numpy()
 print_results(model_name="COCO-trained EoMT Fine-tuned on CityScapes", per_class_iou=per_class_iou_coco_finetuned_on_cityscapes, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=result_json_path_coco_finetuned_on_cityscapes)
 
@@ -125,7 +135,7 @@ print_results(model_name="COCO-trained EoMT Fine-tuned on CityScapes", per_class
 #==================================
 
 
-with open(f"{REPO}/results/step4/coco_trained_eomt_on_cityscapes_results.json", 'r') as f:
+with open(f"{REPO_ROOT}/results/step4/coco_trained_eomt_on_cityscapes_results.json", 'r') as f:
     coco_results = json.load(f)
 
 per_class_iou_coco_trained = np.array(list(coco_results['per_class'].values()))
@@ -141,5 +151,5 @@ compare_result_iou(
     per_class_iou1=per_class_iou_coco_finetuned_on_cityscapes,
     per_class_iou2=per_class_iou_coco_trained,
     class_names=CITYSCAPES_CLASS_NAMES,
-    save_json_path=f"{REPO}/results/step5/compare_results_coco_trained_vs_coco_finetuned_on_cityscapes.json"
+    save_json_path=f"{REPO_ROOT}/results/step5/compare_results_coco_trained_vs_coco_finetuned_on_cityscapes.json"
 )
