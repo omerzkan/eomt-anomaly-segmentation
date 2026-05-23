@@ -124,8 +124,10 @@ evaluator_coco_finetuned_on_cityscapes = semantic_inference(
 #==================================
 # 3-PRINT & SAVE RESULT
 #==================================
-result_json_path_coco_finetuned_on_cityscapes = f"{REPO_ROOT}/results/step5/coco_finetuned_on_cityscapes_results.json"
+result_json_path_coco_finetuned_on_cityscapes = f"/content/drive/MyDrive/FAIMDL/results/step5/coco_finetuned_on_cityscapes_results.json"
+
 per_class_iou_coco_finetuned_on_cityscapes = evaluator_coco_finetuned_on_cityscapes.compute().cpu().numpy()
+
 df_miou_finetuned_coco_on_city, df_iou_per_class_finetuned_coco_on_city = print_results(model_name="COCO-trained EoMT Fine-tuned on CityScapes", per_class_iou=per_class_iou_coco_finetuned_on_cityscapes, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=result_json_path_coco_finetuned_on_cityscapes)
 print("\n")
 print(df_miou_finetuned_coco_on_city)
@@ -141,7 +143,7 @@ print(df_iou_per_class_finetuned_coco_on_city)
 #==================================
 
 
-with open(f"{REPO_ROOT}/results/step4/coco_trained_eomt_on_cityscapes_results.json", 'r') as f:
+with open(f"/content/drive/MyDrive/FAIMDL/results/step4/coco_trained_eomt_on_cityscapes_results.json", 'r') as f:
     coco_results = json.load(f)
 
 per_class_iou_coco_trained = np.array(list(coco_results['per_class'].values()))
@@ -157,7 +159,7 @@ df_miou_compare, df_iou_per_class_compare = compare_result_iou(
     per_class_iou1=per_class_iou_coco_finetuned_on_cityscapes,
     per_class_iou2=per_class_iou_coco_trained,
     class_names=CITYSCAPES_CLASS_NAMES,
-    save_json_path=f"{REPO_ROOT}/results/step5/compare_results_coco_trained_vs_coco_finetuned_on_cityscapes.json"
+    save_json_path=f"/content/drive/MyDrive/FAIMDL/results/step5/compare_results_coco_trained_vs_coco_finetuned_on_cityscapes.json"
 )
 
 print("\n")
