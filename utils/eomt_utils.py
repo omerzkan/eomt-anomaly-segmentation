@@ -232,7 +232,7 @@ def print_results(model_name, per_class_iou=None, class_names=None, save_json_pa
     
     df_miou = pd.DataFrame({
         "model name": model_name,
-        "iou_percentage": (miou*100).tolist()
+        "miou_percentage": (miou*100)
     })    
     df_iou_per_class = pd.DataFrame({
         "class": list(class_names),

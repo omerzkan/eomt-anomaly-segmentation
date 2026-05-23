@@ -32,11 +32,16 @@ sys.path.insert(0, REPO_EOMT)
 # CONFIGURATION & SETUP
 #==================================
 
-REPO = "/content/cloned_repo_feature_omer/eomt"
-# This is the path of the copied github repo in the google colab. 
-
 CONFIG_PATH_CITYSCAPES_TRAINED = f"{REPO_EOMT}/configs/dinov2/cityscapes/semantic/eomt_base_640.yaml"
 # Path to the YAML config that describes EoMT's architecture and training settings.
+
+"""
+TODO:
+I need to check that should I use coco_trained config file or cityscapes trained config file
+Because in here I am trying to do fine tune the coco_trained eomt on cityscape validation dataset.
+So, I need to check it
+
+"""
 
 DATA_PATH_CITYSCAPES_VALIDATION = "/content/drive/MyDrive/FAIMDL/data"
 # Root folder containing the dataset (images + annotations).
@@ -94,6 +99,10 @@ overriders_coco_finetuned_on_cityscapes = {
     ('model', 'init_args', 'img_size'): IMG_SIZE,
     ('model', 'init_args', 'num_classes'): N_CITYSCAPES_CLASSES,  # 19
 }
+"""
+TODO:
+According to the which config I will use, I need to change the IMG_SIZE because it differes between the coco_trained and cityscape trained
+"""
 
 model_coco_finetuned_on_cityscapes = build_model(
     config_path=CONFIG_PATH_CITYSCAPES_TRAINED,
