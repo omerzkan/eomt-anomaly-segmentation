@@ -108,6 +108,10 @@ model_coco_finetuned_on_cityscapes = build_model(
 # 2-INFERENCE LOOP
 #==================================
 
+print("\n==================================")
+print("SANITY CHECK: EVALUATION START")
+print("==================================\n")
+
 evaluator_coco_finetuned_on_cityscapes = semantic_inference(
     model=model_coco_finetuned_on_cityscapes, 
     dataloader=val_loader, 
@@ -122,8 +126,11 @@ evaluator_coco_finetuned_on_cityscapes = semantic_inference(
 #==================================
 result_json_path_coco_finetuned_on_cityscapes = f"{REPO_ROOT}/results/step5/coco_finetuned_on_cityscapes_results.json"
 per_class_iou_coco_finetuned_on_cityscapes = evaluator_coco_finetuned_on_cityscapes.compute().cpu().numpy()
-print_results(model_name="COCO-trained EoMT Fine-tuned on CityScapes", per_class_iou=per_class_iou_coco_finetuned_on_cityscapes, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=result_json_path_coco_finetuned_on_cityscapes)
-
+df_miou_finetuned_coco_on_city, df_iou_per_class_finetuned_coco_on_city = print_results(model_name="COCO-trained EoMT Fine-tuned on CityScapes", per_class_iou=per_class_iou_coco_finetuned_on_cityscapes, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=result_json_path_coco_finetuned_on_cityscapes)
+print("\n")
+print(df_miou_finetuned_coco_on_city)
+print("\n")
+print(df_iou_per_class_finetuned_coco_on_city)
 
 """
 ***************** COMPARE & SAVE RESULTS FOR CITYSCAPES-TRAINED-EOMT vs COCO-TRAINED-EOMT EVALUATION ON CITYSCAPES DATASET *****************
@@ -144,7 +151,7 @@ per_class_iou_coco_trained = np.array(list(coco_results['per_class'].values()))
 # 2-COMPARE THE RESULTS
 #==================================
 
-compare_result_iou(
+df_miou_compare, df_iou_per_class_compare = compare_result_iou(
     "COCO-trained EoMT Fine Tuned on CityScapes",
     "COCO-trained EoMT", 
     per_class_iou1=per_class_iou_coco_finetuned_on_cityscapes,
@@ -152,3 +159,9 @@ compare_result_iou(
     class_names=CITYSCAPES_CLASS_NAMES,
     save_json_path=f"{REPO_ROOT}/results/step5/compare_results_coco_trained_vs_coco_finetuned_on_cityscapes.json"
 )
+
+print("\n")
+print(df_miou_compare)
+print("\n")
+print(df_iou_per_class_compare)
+
