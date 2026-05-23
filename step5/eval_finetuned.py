@@ -84,7 +84,7 @@ evaluator = MulticlassJaccardIndex(
 # 1-BUILD THE MODEL
 #==================================
 
-IMG_SIZE_CITYSCAPE = [1024,1024]
+IMG_SIZE_CITYSCAPE = [640,640]
 overriders_coco_finetuned_on_cityscapes = {
     ('model', 'init_args', 'network', 'init_args', 'encoder', 'init_args', 'img_size'): IMG_SIZE_CITYSCAPE,
     ('model', 'init_args', 'network', 'init_args', 'num_classes'): N_CITYSCAPES_CLASSES,  # 19, not 133
@@ -92,10 +92,6 @@ overriders_coco_finetuned_on_cityscapes = {
     ('model', 'init_args', 'img_size'): IMG_SIZE_CITYSCAPE,
     ('model', 'init_args', 'num_classes'): N_CITYSCAPES_CLASSES,  # 19
 }
-"""
-TODO:
-According to the which config I will use, I need to change the IMG_SIZE because it differes between the coco_trained and cityscape trained
-"""
 
 model_coco_finetuned_on_cityscapes = build_model(
     config_path=CONFIG_PATH_CITYSCAPES_TRAINED,
