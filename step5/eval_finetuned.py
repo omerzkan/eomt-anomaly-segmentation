@@ -88,6 +88,7 @@ IMG_SIZE_CITYSCAPE = [640,640]
 overriders_coco_finetuned_on_cityscapes = {
     ('model', 'init_args', 'network', 'init_args', 'encoder', 'init_args', 'img_size'): IMG_SIZE_CITYSCAPE,
     ('model', 'init_args', 'network', 'init_args', 'num_classes'): N_CITYSCAPES_CLASSES,  # 19, not 133
+    ('model', 'init_args', 'network', 'init_args', 'num_q'): 200,
     ('model', 'init_args', 'network', 'init_args', 'masked_attn_enabled'): False,
     ('model', 'init_args', 'img_size'): IMG_SIZE_CITYSCAPE,
     ('model', 'init_args', 'num_classes'): N_CITYSCAPES_CLASSES,  # 19
