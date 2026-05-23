@@ -231,8 +231,8 @@ def print_results(model_name, per_class_iou=None, class_names=None, save_json_pa
     miou = float(per_class_iou.mean())
     
     df_miou = pd.DataFrame({
-        "model name": model_name,
-        "miou_percentage": (miou*100)
+        "model name": [model_name],
+        "miou_percentage": [miou*100]
     })    
     df_iou_per_class = pd.DataFrame({
         "class": list(class_names),
@@ -273,8 +273,8 @@ def compare_result_iou(model_name1, model_name2, per_class_iou1=None, per_class_
     miou2 = float(per_class_iou2.mean())
     
     df_miou = pd.DataFrame({
-        f'miou_{model_name1}': miou1,
-        f'miou_{model_name2}': miou2
+        f'miou_{model_name1} percentage': [miou1*100],
+        f'miou_{model_name2} percentage': [miou2*100]
     })
     
     df_iou_per_class = pd.DataFrame({
