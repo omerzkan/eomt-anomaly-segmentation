@@ -13,7 +13,7 @@ It evaluates the performance of both models on the Cityscapes validation set and
 import sys
 import os
 from torchmetrics.classification import MulticlassJaccardIndex
-from utils.eomt_utils import CITYSCAPES_CLASS_NAMES, DEVICE, IGNORE_INDEX, IMG_SIZE, N_CITYSCAPES_CLASSES
+from utils.eomt_utils import CITYSCAPES_CLASS_NAMES, DEVICE, IGNORE_INDEX, N_CITYSCAPES_CLASSES
 from utils.eomt_utils import build_model, semantic_inference, insert_path, setup_seed, wandb_setup, compare_result_iou, print_results
 import json
 import numpy as np
@@ -33,15 +33,7 @@ sys.path.insert(0, REPO_EOMT)
 #==================================
 
 CONFIG_PATH_CITYSCAPES_TRAINED = f"{REPO_EOMT}/configs/dinov2/cityscapes/semantic/eomt_base_640.yaml"
-# Path to the YAML config that describes EoMT's architecture and training settings.
-
-"""
-TODO:
-I need to check that should I use coco_trained config file or cityscapes trained config file
-Because in here I am trying to do fine tune the coco_trained eomt on cityscape validation dataset.
-So, I need to check it
-
-"""
+# Path to the YAML config that describes EoMT's architecture and training setting for cityscapes trained eomt. 
 
 DATA_PATH_CITYSCAPES_VALIDATION = "/content/drive/MyDrive/FAIMDL/data"
 # Root folder containing the dataset (images + annotations).
@@ -64,7 +56,7 @@ data = CityscapesSemantic(
     path=DATA_PATH_CITYSCAPES_VALIDATION,
     batch_size=1,
     num_workers=2,
-    img_size=(640, 640)
+    img_size=(896, 896)
 )
 
 data.setup("validate")
@@ -92,11 +84,12 @@ evaluator = MulticlassJaccardIndex(
 # 1-BUILD THE MODEL
 #==================================
 
+IMG_SIZE_CITYSCAPE = [1024,1024]
 overriders_coco_finetuned_on_cityscapes = {
-    ('model', 'init_args', 'network', 'init_args', 'encoder', 'init_args', 'img_size'): IMG_SIZE,
+    ('model', 'init_args', 'network', 'init_args', 'encoder', 'init_args', 'img_size'): IMG_SIZE_CITYSCAPE,
     ('model', 'init_args', 'network', 'init_args', 'num_classes'): N_CITYSCAPES_CLASSES,  # 19, not 133
     ('model', 'init_args', 'network', 'init_args', 'masked_attn_enabled'): False,
-    ('model', 'init_args', 'img_size'): IMG_SIZE,
+    ('model', 'init_args', 'img_size'): IMG_SIZE_CITYSCAPE,
     ('model', 'init_args', 'num_classes'): N_CITYSCAPES_CLASSES,  # 19
 }
 """
