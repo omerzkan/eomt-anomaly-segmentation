@@ -5,12 +5,21 @@ This is the evaluation script for
 the Fine-tuned on Cityscapes Dataset version of the COCO-Trained-EoMT model vs the original COCO-Trained-EoMT model. 
 It evaluates the performance of both models on the Cityscapes validation set and compares their results.
 """
+#==================================
+# INSERTING PATHS TO THE SYSTEM
+#==================================
+import sys
+
+REPO_EOMT = "/content/cloned_repo_feature_omer/eomt"
+REPO_ROOT = "/content/cloned_repo_feature_omer"
+
+sys.path.insert(0, REPO_ROOT)
+sys.path.insert(0, REPO_EOMT)
 
 #==================================
 # IMPORTS
 #==================================
 
-import sys
 import os
 from torchmetrics.classification import MulticlassJaccardIndex
 from utils.eomt_utils import CITYSCAPES_CLASS_NAMES, DEVICE, IGNORE_INDEX, N_CITYSCAPES_CLASSES
@@ -18,15 +27,6 @@ from utils.eomt_utils import build_model, semantic_inference, insert_path, setup
 import json
 import numpy as np
 
-#==================================
-# INSERTING PATHS TO THE SYSTEM
-#==================================
-
-REPO_EOMT = "/content/cloned_repo_feature_omer/eomt"
-REPO_ROOT = "/content/cloned_repo_feature_omer"
-
-sys.path.insert(0, REPO_ROOT)
-sys.path.insert(0, REPO_EOMT)
 
 #==================================
 # CONFIGURATION & SETUP
