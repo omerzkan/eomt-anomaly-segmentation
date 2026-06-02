@@ -36,6 +36,7 @@ outputs/
 !eval/requirements.txt
 !eval/README.md
 !eomt/requirements.txt
+!requirements.txt
 !results/step4
 
 # Jupyter
