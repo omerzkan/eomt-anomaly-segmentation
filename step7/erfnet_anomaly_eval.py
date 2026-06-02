@@ -21,7 +21,28 @@ from utils.eomt_utils import DEVICE, setup_seed, wandb_setup
 from utils.anomaly_utils import MaxLogit, MSP, MaxEntropy, erfnet_anomaly_inference, print_anomaly_results
  
 from erfnet import ERFNet
- 
+
+import os
+import zipfile
+
+#==================================
+# DATASET EXTRACTION (if needed)
+#==================================
+
+ZIP_PATH = "/content/drive/MyDrive/FAIMDL/data/Anomaly_Validation_Datasets.zip"
+EXTRACT_TO = "/content/data"
+DATASET_FOLDER_NAME = "Validation_Dataset"   # the folder name INSIDE the zip
+
+# Only extract if not already done (idempotent)
+if not os.path.exists(f"{EXTRACT_TO}/{DATASET_FOLDER_NAME}"):
+    print("Extracting anomaly validation datasets...")
+    os.makedirs(EXTRACT_TO, exist_ok=True)
+    with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
+        zip_ref.extractall(EXTRACT_TO)
+    print(f"Extracted to {EXTRACT_TO}/{DATASET_FOLDER_NAME}\n")
+else:
+    print(f"Datasets already extracted at {EXTRACT_TO}/{DATASET_FOLDER_NAME}\n")
+
 #==================================
 # CONFIGURATION & SETUP
 #==================================
@@ -33,7 +54,7 @@ WEIGHTS_PATH_ERFNET = f"{REPO_ROOT}/trained_models/erfnet_pretrained.pth"
 # Path to the pretrained ERFNet weights. This is the original ERFNet pretrained
 # on Cityscapes. We use it as-is without any retraining.
  
-DATA_PATH_VALIDATION = "/content/drive/MyDrive/FAIMDL/data/Anomaly_Validation_Datasets"
+DATA_PATH_VALIDATION = f"{EXTRACT_TO}/{DATASET_FOLDER_NAME}"
 # Root folder containing the 5 anomaly validation datasets.
  
 RESULTS_DIR = "/content/drive/MyDrive/FAIMDL/results/step7"
