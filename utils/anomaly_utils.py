@@ -175,7 +175,7 @@ def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform,
             imgs = [img_tensor]
             img_sizes = [img_tensor.shape[-2:]]
             
-            with torch.autocast(dtype=torch.float16, device_type=device):
+            with torch.autocast(device_type=device):
                 
                 crops, origins = model.window_imgs_semantic(imgs)
                 mask_logits_list, class_logits_list = model(crops)
