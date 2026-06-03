@@ -160,7 +160,7 @@ model_coco = build_model(
 # Image preprocessing transforms for COCO model
 input_transform_coco = Compose([
     Resize((640, 640), Image.BILINEAR),
-    pil_to_uint8_tensor,
+    pil_to_uint8_tensor
 ])
 target_transform_coco = Compose([
     Resize((640, 640), Image.NEAREST),
@@ -223,7 +223,7 @@ model_cityscapes = build_model(
  
 input_transform_cityscapes = Compose([
     Resize((1024, 1024), Image.BILINEAR),
-    ToTensor(),
+    pil_to_uint8_tensor
 ])
 target_transform_cityscapes = Compose([
     Resize((1024, 1024), Image.NEAREST),
@@ -287,7 +287,7 @@ model_finetuned = build_model(
  
 input_transform_finetuned = Compose([
     Resize((640, 640), Image.BILINEAR),
-    ToTensor(),
+    pil_to_uint8_tensor
 ])
 target_transform_finetuned = Compose([
     Resize((640, 640), Image.NEAREST),

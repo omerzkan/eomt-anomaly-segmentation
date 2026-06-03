@@ -7,7 +7,7 @@ from ood_metrics import fpr_at_95_tpr
 from PIL import Image
 import torch
 from tqdm import tqdm
-
+import torch.nn.functional as F
 
 def calc_softmax(logits):
     exp_logits = np.exp(logits - np.max(logits, axis=0, keepdims=True))
