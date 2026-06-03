@@ -147,11 +147,11 @@ model_coco = build_model(
  
 # Image preprocessing transforms for COCO model
 input_transform_coco = Compose([
-    Resize((896, 896), Image.BILINEAR),
+    Resize((640, 640), Image.BILINEAR),
     ToTensor(),
 ])
 target_transform_coco = Compose([
-    Resize((896, 896), Image.NEAREST),
+    Resize((640, 640), Image.NEAREST),
 ])
  
 #==================================
