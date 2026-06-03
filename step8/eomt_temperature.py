@@ -67,7 +67,7 @@ for model_name in MODELS:
         
         dataset_results = evaluate_temperature(
             saved_logits_path=logits_dir,
-            scoring_methods_classes=SCORING_METHODS,
+            scoring_methods=SCORING_METHODS,
             temperatures=TEMPERATURES,
         )
         
