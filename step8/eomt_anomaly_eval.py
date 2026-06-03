@@ -15,6 +15,7 @@ import glob
 import torch
 from PIL import Image
 from torchvision.transforms import Compose, Resize, ToTensor
+import numpy as np 
  
 from utils.eomt_utils import DEVICE, build_model, setup_seed, wandb_setup
 from utils.anomaly_utils import MaxLogit, MSP, MaxEntropy, RbA, eomt_anomaly_inference, print_anomaly_results
@@ -84,7 +85,7 @@ scoring_methods = {
 }
 
 #==================================
-# HELPER FUNCTION FOR RUN ALL 5 DATASETS FOR ONE MODEL
+# HELPER FUNCTION: FOR RUN ALL 5 DATASETS FOR ONE MODEL
 #==================================
 
 def evaluate_model_on_all_datasets(model, model_name, input_transform, target_transform):
@@ -111,6 +112,17 @@ def evaluate_model_on_all_datasets(model, model_name, input_transform, target_tr
         torch.cuda.empty_cache()  # Clear GPU memory after each dataset
     
     return all_results
+
+
+#==================================
+# HELPER FUNCTION: FOR CONVERTING PIL IMAGE TO UINT8 TENSOR
+#==================================
+
+def pil_to_uint8_tensor(pil_img):
+    arr = np.array(pil_img)  # (H, W, C) uint8
+    tensor = torch.from_numpy(arr).permute(2, 0, 1)  # (C, H, W) uint8
+    return tensor
+
 
 """
 ***************** SECTION 1: EoMT-COCO-trained *****************
@@ -148,7 +160,7 @@ model_coco = build_model(
 # Image preprocessing transforms for COCO model
 input_transform_coco = Compose([
     Resize((640, 640), Image.BILINEAR),
-    ToTensor(),
+    pil_to_uint8_tensor,
 ])
 target_transform_coco = Compose([
     Resize((640, 640), Image.NEAREST),
@@ -160,10 +172,10 @@ target_transform_coco = Compose([
 results_coco = evaluate_model_on_all_datasets(
     model=model_coco,
     model_name="EoMT-COCO",
-    target_transform=target_transform_coco,
     input_transform=input_transform_coco,
+    target_transform=target_transform_coco
 )
- 
+
 #==================================
 # 3-PRINT & SAVE RESULTS
 #==================================
@@ -223,8 +235,8 @@ target_transform_cityscapes = Compose([
 results_cityscapes = evaluate_model_on_all_datasets(
     model=model_cityscapes,
     model_name="EoMT-Cityscapes",
-    target_transform=target_transform_cityscapes,
     input_transform=input_transform_cityscapes,
+    target_transform=target_transform_cityscapes
 )
  
 #==================================
@@ -287,8 +299,8 @@ target_transform_finetuned = Compose([
 results_finetuned = evaluate_model_on_all_datasets(
     model=model_finetuned,
     model_name="EoMT-Fine-tuned",
-    target_transform=target_transform_finetuned,
     input_transform=input_transform_finetuned,
+    target_transform=target_transform_finetuned
 )
  
 #==================================

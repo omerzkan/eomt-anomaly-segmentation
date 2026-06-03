@@ -612,11 +612,8 @@ class LightningModule(lightning.LightningModule):
 
         for i in range(len(imgs)):
             img = imgs[i]
-            np_array = img.permute(1, 2, 0).cpu().numpy()
-            print(f"DEBUG: np_array dtype={np_array.dtype}, shape={np_array.shape}, min={np_array.min()}, max={np_array.max()}", flush=True)
             new_h, new_w = self.scale_img_size_semantic(img.shape[-2:])
-            pil_img = Image.fromarray(np_array)
-            #pil_img = Image.fromarray(img.permute(1, 2, 0).cpu().numpy())
+            pil_img = Image.fromarray(img.permute(1, 2, 0).cpu().numpy())
             resized_img = pil_img.resize((new_w, new_h), Image.BILINEAR)
             resized_img = (
                 torch.from_numpy(np.array(resized_img)).permute(2, 0, 1).to(img.device)
