@@ -31,7 +31,7 @@ import zipfile
 
 ZIP_PATH = "/content/drive/MyDrive/FAIMDL/data/Anomaly_Validation_Datasets.zip"
 EXTRACT_TO = "/content/data"
-DATASET_FOLDER_NAME = "Validation_Dataset"   # the folder name INSIDE the zip
+DATASET_FOLDER_NAME = "Validation_Dataset"
 
 # Only extract if not already done (idempotent)
 if not os.path.exists(f"{EXTRACT_TO}/{DATASET_FOLDER_NAME}"):
@@ -107,9 +107,7 @@ model = torch.nn.DataParallel(model).to(DEVICE)
  
  
 def load_my_state_dict(model, state_dict):
-    """Custom loader from existing evalAnomaly.py that handles
-    weight files that don't perfectly match the model's state_dict.
-    """
+
     own_state = model.state_dict()
     for name, param in state_dict.items():
         if name not in own_state:
@@ -134,7 +132,6 @@ model.eval()
 # 2-DEFINE THE SCORING METHODS
 #==================================
 # All three methods at default temperature (T=1.0).
-# Temperature sweep is a separate experiment (run after this main eval).
  
 scoring_methods = {
     "MSP":        MSP(),

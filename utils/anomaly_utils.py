@@ -58,6 +58,16 @@ class MaxEntropy:
         
         return entropy
 
+class RbA:
+    def __init__(self, temperature=1.0):
+        self.temperature = temperature
+    
+    def anomaly_score(self, logits):
+        
+        scaled_logits = apply_temperature(logits, self.temperature)    
+        return -np.tanh(scaled_logits).sum(axis=0)
+    
+
 def load_gt_mask(image_path, target_transform=None):
     
     """
@@ -150,6 +160,54 @@ def erfnet_anomaly_inference(model, image_paths, scoring_methods, input_transfor
     return results
 
 
+def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform, target_transform, device="cuda", description="EoMT Anomaly Inference"):
+
+    model.eval()
+    ood_gts_list = []
+    scores_per_method = {name: [] for name in scoring_methods}
+    
+    with torch.no_grad():
+        for path in tqdm(image_paths, desc=description):
+            
+            image = Image.open(path).convert("RGB")
+            img_tensor = input_transform(image).to(device)
+            
+            imgs = [img_tensor]
+            img_sizes = [img_tensor.shape[-2:]]
+            
+            with torch.autocast(dtype=torch.float16, device_type=device):
+                
+                crops, origins = model.window_imgs_semantic(imgs)
+                mask_logits_list, class_logits_list = model(crops)
+                mask_logits = F.interpolate(mask_logits_list[-1], model.img_size, mode='bilinear')
+                crop_logits = model.to_per_pixel_logits_semantic(
+                    mask_logits, class_logits_list[-1]
+                )
+                logits = model.revert_window_logits_semantic(
+                    crop_logits, origins, img_sizes
+                )
+            
+            logits_np = logits[0].float().cpu().numpy()
+            
+            gt_mask = load_gt_mask(path, target_transform)
+            
+            if 1 not in np.unique(gt_mask):
+                continue
+            
+            ood_gts_list.append(gt_mask)
+            
+            for name, method in scoring_methods.items():
+                
+                anomaly_score = method.anomaly_score(logits_np)
+                scores_per_method[name].append(anomaly_score)
+
+    results = {}
+    for name, scores in scores_per_method.items():
+        metrics = calc_anomaly_metrics(ood_gts_list, scores)
+        results[name] = metrics
+    
+    return results
+
 def print_anomaly_results(model_name, all_results, save_json_path=None):
     
     print(f"\n============ {model_name} ============\n")
@@ -187,12 +245,3 @@ def print_anomaly_results(model_name, all_results, save_json_path=None):
 
     return df_auprc, df_fpr
 
-class RbA:
-    def __init__(self, temperature=1.0):
-        self.temperature = temperature
-    
-    def anomaly_score(self, logits):
-        
-        scaled_logits = apply_temperature(logits, self.temperature)    
-        return -np.tanh(scaled_logits).sum(axis=0)
-    
