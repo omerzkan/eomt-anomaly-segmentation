@@ -166,6 +166,7 @@ for dataset_name, dataset_glob in DATASET_GLOBS.items():
         target_transform=target_transform,
         device=DEVICE,
         description=f"ERFNet on {dataset_name}",
+        save_logits_path=f"/content/saved_logits/erfnet/{dataset_name}"
     )
  
     all_results[dataset_name] = results
@@ -179,7 +180,7 @@ for dataset_name, dataset_glob in DATASET_GLOBS.items():
 result_json_path = f"{RESULTS_DIR}/erfnet_anomaly_results.json"
  
 df_auprc, df_fpr95 = print_anomaly_results(
-    model_name="ERFNet",
+    model_name="erfnet",
     all_results=all_results,
     save_json_path=result_json_path,
 )

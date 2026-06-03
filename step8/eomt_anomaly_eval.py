@@ -106,7 +106,9 @@ def evaluate_model_on_all_datasets(model, model_name, input_transform, target_tr
             input_transform=input_transform,
             target_transform=target_transform,
             device=DEVICE,
-            description=f"{model_name} - {dataset_name}"
+            description=f"{model_name} - {dataset_name}",
+            save_logits_path = f"/content/saved_logits/{model_name}/{dataset_name}"
+            
         )
         all_results[dataset_name] = results
         torch.cuda.empty_cache()  # Clear GPU memory after each dataset
@@ -171,7 +173,7 @@ target_transform_coco = Compose([
 #==================================
 results_coco = evaluate_model_on_all_datasets(
     model=model_coco,
-    model_name="EoMT-COCO",
+    model_name="eomt_coco",
     input_transform=input_transform_coco,
     target_transform=target_transform_coco
 )
@@ -180,7 +182,7 @@ results_coco = evaluate_model_on_all_datasets(
 # 3-PRINT & SAVE RESULTS
 #==================================
 df_auprc_coco, df_fpr95_coco = print_anomaly_results(
-    model_name="EoMT-COCO",
+    model_name="eomt_coco",
     all_results=results_coco,
     save_json_path=f"{RESULTS_DIR}/eomt_coco_anomaly_results.json",
 )
@@ -189,7 +191,7 @@ print(df_auprc_coco)
 print("\n=== FPR95 (%) ===\n")
 print(df_fpr95_coco)
  
-# Free GPU memory before loading the next model
+# Free GPU memory before the next model
 del model_coco
 torch.cuda.empty_cache()
  
@@ -234,7 +236,7 @@ target_transform_cityscapes = Compose([
 #==================================
 results_cityscapes = evaluate_model_on_all_datasets(
     model=model_cityscapes,
-    model_name="EoMT-Cityscapes",
+    model_name="eomt_cityscapes",
     input_transform=input_transform_cityscapes,
     target_transform=target_transform_cityscapes
 )
@@ -243,7 +245,7 @@ results_cityscapes = evaluate_model_on_all_datasets(
 # 3-PRINT & SAVE RESULTS
 #==================================
 df_auprc_city, df_fpr95_city = print_anomaly_results(
-    model_name="EoMT-Cityscapes",
+    model_name="eomt_cityscapes",
     all_results=results_cityscapes,
     save_json_path=f"{RESULTS_DIR}/eomt_cityscapes_anomaly_results.json",
 )
@@ -252,7 +254,7 @@ print(df_auprc_city)
 print("\n=== FPR95 (%) ===\n")
 print(df_fpr95_city)
  
-# Free GPU memory before loading the next model
+# Free GPU memory before next model
 del model_cityscapes
 torch.cuda.empty_cache()
  
@@ -298,7 +300,7 @@ target_transform_finetuned = Compose([
 #==================================
 results_finetuned = evaluate_model_on_all_datasets(
     model=model_finetuned,
-    model_name="EoMT-Fine-tuned",
+    model_name="eomt_finetuned",
     input_transform=input_transform_finetuned,
     target_transform=target_transform_finetuned
 )
@@ -307,7 +309,7 @@ results_finetuned = evaluate_model_on_all_datasets(
 # 3-PRINT & SAVE RESULTS
 #==================================
 df_auprc_finetuned, df_fpr95_finetuned = print_anomaly_results(
-    model_name="EoMT-Fine-tuned",
+    model_name="eomt_finetuned",
     all_results=results_finetuned,
     save_json_path=f"{RESULTS_DIR}/eomt_finetuned_anomaly_results.json",
 )

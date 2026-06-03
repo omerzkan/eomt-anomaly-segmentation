@@ -1,5 +1,6 @@
 
 import json
+import os
 import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score
@@ -126,10 +127,13 @@ def calc_anomaly_metrics(ood_gts_list, anomaly_score_list):
     return {'auprc': prc_auc, 'fpr95': fpr}
 
 
-def erfnet_anomaly_inference(model, image_paths, scoring_methods, input_transform, target_transform, device="cuda", description="AnomalyInference"):
+def erfnet_anomaly_inference(model, image_paths, scoring_methods, input_transform, target_transform, device="cuda", description="ERFNeT Anomaly Inference", save_logits_path=None):
     model.eval()
     ood_gts_list = []
     scores_per_method = {name: [] for name in scoring_methods}
+    
+    saved_logits = []
+    saved_gts = []
     
     with torch.no_grad():
         for path in tqdm(image_paths, desc=description):
@@ -151,20 +155,35 @@ def erfnet_anomaly_inference(model, image_paths, scoring_methods, input_transfor
                 
                 anomaly_score = method.anomaly_score(logits)
                 scores_per_method[name].append(anomaly_score)
+                
+            if save_logits_path is not None:
+                saved_logits.append(logits.astype(np.float32))
+                saved_gts.append(gt_mask.astype(np.uint8))
     
     results = {}
     for name, scores in scores_per_method.items():
         metrics = calc_anomaly_metrics(ood_gts_list, scores)
         results[name] = metrics
-        
+    
+    if save_logits_path is not None:
+        os.makedirs(save_logits_path, exist_ok=True)
+        save_path = os.path.join(save_logits_path, "logits_and_gt.npz")
+        np.savez_compressed(save_path, 
+                            logits=np.array(saved_logits, dtype=object),
+                            gt=np.array(saved_gts, dtype=object))
+        print(f"\nLogits and GTs saved to {save_path}\n")    
+    
     return results
 
 
-def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform, target_transform, device="cuda", description="EoMT Anomaly Inference"):
+def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform, target_transform, device="cuda", description="EoMT Anomaly Inference", save_logits_path=None):
 
     model.eval()
     ood_gts_list = []
     scores_per_method = {name: [] for name in scoring_methods}
+    
+    saved_logits = []
+    saved_gts = []
     
     with torch.no_grad():
         for path in tqdm(image_paths, desc=description):
@@ -200,11 +219,23 @@ def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform,
                 
                 anomaly_score = method.anomaly_score(logits_np)
                 scores_per_method[name].append(anomaly_score)
+        
+            if save_logits_path is not None:
+                saved_logits.append(logits.astype(np.float32))
+                saved_gts.append(gt_mask.astype(np.uint8))
 
     results = {}
     for name, scores in scores_per_method.items():
         metrics = calc_anomaly_metrics(ood_gts_list, scores)
         results[name] = metrics
+    
+    if save_logits_path is not None:
+        os.makedirs(save_logits_path, exist_ok=True)
+        save_path = os.path.join(save_logits_path, "logits_and_gt.npz")
+        np.savez_compressed(save_path, 
+                            logits=np.array(saved_logits, dtype=object),
+                            gt=np.array(saved_gts, dtype=object))
+        print(f"\nLogits and GTs saved to {save_path}\n")  
     
     return results
 
@@ -245,3 +276,20 @@ def print_anomaly_results(model_name, all_results, save_json_path=None):
 
     return df_auprc, df_fpr
 
+
+def evaluate_temperature(saved_logits_path, scoring_methods, temperatures):
+
+    data = np.load(saved_logits_path, allow_pickle=True)
+    logits_list = data['logits']
+    gt_list = data['gt']
+    
+    results = {name: {} for name in scoring_methods}
+    
+    for method_name, method_class in scoring_methods.items():
+        for T in temperatures:
+            scorer = method_class(temperature=T)
+            scores_list = [scorer.anomaly_score(logits) for logits in logits_list]
+            metrics = calc_anomaly_metrics(list(gt_list), scores_list)
+            results[method_name][T] = metrics
+    
+    return results
