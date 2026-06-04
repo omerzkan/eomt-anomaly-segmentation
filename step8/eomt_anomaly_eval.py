@@ -88,7 +88,7 @@ scoring_methods = {
 # HELPER FUNCTION: FOR RUN ALL 5 DATASETS FOR ONE MODEL
 #==================================
 
-def evaluate_model_on_all_datasets(model, model_name, input_transform, target_transform):
+def evaluate_model_on_all_datasets(model, model_name, input_transform, target_transform, is_save_logits=True):
     all_results = {}
     for dataset_name, dataset_glob in DATASET_GLOBS.items():
         print(f"\n***************** {model_name} - {dataset_name} *****************\n")
@@ -107,7 +107,7 @@ def evaluate_model_on_all_datasets(model, model_name, input_transform, target_tr
             target_transform=target_transform,
             device=DEVICE,
             description=f"{model_name} - {dataset_name}",
-            save_logits_path = f"/content/saved_logits/{model_name}/{dataset_name}"
+            save_logits_path = f"/content/saved_logits/{model_name}/{dataset_name}" if is_save_logits else None
             
         )
         all_results[dataset_name] = results
@@ -175,7 +175,8 @@ results_coco = evaluate_model_on_all_datasets(
     model=model_coco,
     model_name="eomt_coco",
     input_transform=input_transform_coco,
-    target_transform=target_transform_coco
+    target_transform=target_transform_coco,
+    is_save_logits=False
 )
 
 #==================================
@@ -238,7 +239,8 @@ results_cityscapes = evaluate_model_on_all_datasets(
     model=model_cityscapes,
     model_name="eomt_cityscapes",
     input_transform=input_transform_cityscapes,
-    target_transform=target_transform_cityscapes
+    target_transform=target_transform_cityscapes,
+    is_save_logits=True
 )
  
 #==================================
@@ -302,7 +304,8 @@ results_finetuned = evaluate_model_on_all_datasets(
     model=model_finetuned,
     model_name="eomt_finetuned",
     input_transform=input_transform_finetuned,
-    target_transform=target_transform_finetuned
+    target_transform=target_transform_finetuned,
+    is_save_logits=True
 )
  
 #==================================
