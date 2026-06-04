@@ -2,6 +2,7 @@
 #==================================
 # INSERTING PATHS TO THE SYSTEM
 #==================================
+import glob
 import sys
 REPO_ROOT = "/content/cloned_repo_feature_omer"
 sys.path.insert(0, REPO_ROOT)
@@ -52,16 +53,15 @@ for dataset_name in DATASET_NAMES:
     
     logits_dir = f"{SAVED_LOGITS_ROOT}/{dataset_name}"
     
-    if not os.path.exists(os.path.join(logits_dir, "logits_and_gt.npz")):
+    has_batches = len(glob.glob(os.path.join(logits_dir, "batch_*.npz"))) > 0
+    if not has_batches:
         print(f"WARNING: No saved logits for erfnet/{dataset_name}, skipping")
         continue
     
     print(f"  {dataset_name}...", end=" ")
     
-    logits_file = f"{SAVED_LOGITS_ROOT}/{dataset_name}/logits_and_gt.npz"
-    
     dataset_results = evaluate_temperature(
-        saved_logits_path=logits_file,
+        saved_logits_path=logits_dir,
         scoring_methods=SCORING_METHODS,
         temperatures=TEMPERATURES,
     )
