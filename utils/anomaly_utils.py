@@ -289,7 +289,7 @@ def evaluate_temperature(saved_logits_path, scoring_methods, temperatures):
     for method_name, method_class in scoring_methods.items():
         for T in temperatures:
             scorer = method_class(temperature=T)
-            scores_list = [scorer.anomaly_score(logits) for logits in logits_list]
+            scores_list = [scorer.anomaly_score(np.array(logits, dtype=np.float32)) for logits in logits_list]
             metrics = calc_anomaly_metrics(list(gt_list), scores_list)
             results[method_name][T] = metrics
     
