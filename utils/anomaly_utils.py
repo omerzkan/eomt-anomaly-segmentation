@@ -142,7 +142,7 @@ def erfnet_anomaly_inference(model, image_paths, scoring_methods, input_transfor
             input_tensor = input_transform(image).unsqueeze(0).float().to(device)
             
             logits = model(input_tensor)
-            logits = logits.squeeze(0).cpu().numpy()
+            logits_np = logits.squeeze(0).cpu().numpy()
             
             gt_mask = load_gt_mask(path, target_transform)
             
@@ -157,7 +157,7 @@ def erfnet_anomaly_inference(model, image_paths, scoring_methods, input_transfor
                 scores_per_method[name].append(anomaly_score)
                 
             if save_logits_path is not None:
-                saved_logits.append(logits.astype(np.float32))
+                saved_logits.append(logits_np.astype(np.float16))
                 saved_gts.append(gt_mask.astype(np.uint8))
     
     results = {}
@@ -221,7 +221,7 @@ def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform,
                 scores_per_method[name].append(anomaly_score)
         
             if save_logits_path is not None:
-                saved_logits.append(logits.astype(np.float32))
+                saved_logits.append(logits_np.astype(np.float16))
                 saved_gts.append(gt_mask.astype(np.uint8))
 
     results = {}
