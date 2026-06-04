@@ -282,8 +282,9 @@ def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform,
             batch_num = len([f for f in os.listdir(save_logits_path) if f.startswith("batch_")]) if os.path.exists(save_logits_path) else 0
             save_batch_to_npz(save_logits_path, batch_num, saved_logits, saved_gts)
     
-    combine_batch_files(save_logits_path)
-    print(f"\nAll logits saved to {save_logits_path}/logits_and_gt.npz\n")
+        combine_batch_files(save_logits_path)
+        print(f"\nAll logits saved to {save_logits_path}/logits_and_gt.npz\n")
+    
     return results
 
 def print_anomaly_results(model_name, all_results, save_json_path=None):
