@@ -177,6 +177,46 @@ def erfnet_anomaly_inference(model, image_paths, scoring_methods, input_transfor
     return results
 
 
+def save_batch_to_npz(save_logits_path, batch_num, logits_list, gt_list):
+    """Save a single batch of logits to disk."""
+    os.makedirs(save_logits_path, exist_ok=True)
+    batch_file = os.path.join(save_logits_path, f"batch_{batch_num}.npz")
+    np.savez_compressed(batch_file,
+                        logits=np.array(logits_list, dtype=object),
+                        gt=np.array(gt_list, dtype=object))
+    print(f"  → Saved batch {batch_num} ({len(logits_list)} images)")
+
+
+def combine_batch_files(save_logits_path):
+    """Combine all batch files into a single logits_and_gt.npz."""
+    import glob
+    
+    batch_files = sorted(glob.glob(os.path.join(save_logits_path, "batch_*.npz")))
+    
+    if not batch_files:
+        print(f"WARNING: No batch files found in {save_logits_path}")
+        return
+    
+    all_logits = []
+    all_gts = []
+    
+    for batch_file in batch_files:
+        data = np.load(batch_file, allow_pickle=True)
+        all_logits.extend(data['logits'])
+        all_gts.extend(data['gt'])
+    
+    # Save combined file
+    final_file = os.path.join(save_logits_path, "logits_and_gt.npz")
+    np.savez_compressed(final_file,
+                        logits=np.array(all_logits, dtype=object),
+                        gt=np.array(all_gts, dtype=object))
+    print(f"✓ Combined {len(batch_files)} batches → {final_file}")
+    
+    # Optional: Delete individual batch files to save space
+    for batch_file in batch_files:
+        os.remove(batch_file)
+    print(f"  (Deleted {len(batch_files)} temporary batch files)")
+    
 def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform, target_transform, device="cuda", description="EoMT Anomaly Inference", save_logits_path=None):
 
     model.eval()
@@ -224,6 +264,12 @@ def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform,
             if save_logits_path is not None:
                 saved_logits.append(logits_np.astype(np.float16))
                 saved_gts.append(gt_mask.astype(np.uint8))
+                
+                if len(saved_logits) >= 100:
+                    batch_num = len([f for f in os.listdir(save_logits_path) if f.startswith("batch_")]) if os.path.exists(save_logits_path) else 0
+                    save_batch_to_npz(save_logits_path, batch_num, saved_logits, saved_gts)
+                    saved_logits = []
+                    saved_gts = []
 
     results = {}
     for name, scores in scores_per_method.items():
@@ -231,13 +277,13 @@ def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform,
         results[name] = metrics
     
     if save_logits_path is not None:
-        os.makedirs(save_logits_path, exist_ok=True)
-        save_path = os.path.join(save_logits_path, "logits_and_gt.npz")
-        np.savez_compressed(save_path, 
-                            logits=np.array(saved_logits, dtype=object),
-                            gt=np.array(saved_gts, dtype=object))
-        print(f"\nLogits and GTs saved to {save_path}\n")  
+        
+        if saved_logits:
+            batch_num = len([f for f in os.listdir(save_logits_path) if f.startswith("batch_")]) if os.path.exists(save_logits_path) else 0
+            save_batch_to_npz(save_logits_path, batch_num, saved_logits, saved_gts)
     
+    combine_batch_files(save_logits_path)
+    print(f"\nAll logits saved to {save_logits_path}/logits_and_gt.npz\n")
     return results
 
 def print_anomaly_results(model_name, all_results, save_json_path=None):
