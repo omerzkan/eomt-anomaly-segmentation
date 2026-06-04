@@ -1,6 +1,7 @@
 
 import json
 import os
+from time import time
 import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score
@@ -185,9 +186,13 @@ def save_batch_to_npz(save_logits_path, batch_num, logits_list, gt_list):
     """Save a single batch of logits to disk."""
     os.makedirs(save_logits_path, exist_ok=True)
     batch_file = os.path.join(save_logits_path, f"batch_{batch_num}.npz")
-    np.savez_compressed(batch_file,
+    
+    start = time.time()
+    np.savez(batch_file,
                         logits=np.array(logits_list, dtype=object),
                         gt=np.array(gt_list, dtype=object))
+    
+    print(f"  Save took {time.time()-start:.1f}s")
     print(f"  → Saved batch {batch_num} ({len(logits_list)} images)")
 
     
