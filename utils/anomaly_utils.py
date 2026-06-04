@@ -302,32 +302,50 @@ def print_anomaly_results(model_name, all_results, save_json_path=None):
     return df_auprc, df_fpr
 
 def evaluate_temperature(saved_logits_path, scoring_methods, temperatures):
+    """
+    Sweep temperatures. Loads each batch file only ONCE.
+    
+    Memory-efficient: holds one batch in RAM, computes all (method, T)
+    scores for it, accumulates results, moves to next batch.
+    """
     import glob
     
     batch_files = sorted(glob.glob(os.path.join(saved_logits_path, "batch_*.npz")))
     if not batch_files:
         raise FileNotFoundError(f"No batch files in {saved_logits_path}")
     
-    # Load ALL images once, cast to float32 once
-    # This trades RAM for speed — fine for ERFNet (small images)
-    all_logits_f32 = []
-    all_gts = []
+    # Build score accumulators: one list per (method, T)
+    score_accumulators = {
+        (name, T): [] 
+        for name in scoring_methods 
+        for T in temperatures
+    }
+    gt_accumulator = []
+    
+    # Iterate once per batch file
     for bf in batch_files:
         data = np.load(bf, allow_pickle=True)
+        
         for logits, gt in zip(data['logits'], data['gt']):
-            all_logits_f32.append(np.array(logits, dtype=np.float32))
-            all_gts.append(np.array(gt))
+            # Cast to float32 ONCE per image
+            logits_f32 = np.array(logits, dtype=np.float32)
+            gt_accumulator.append(gt)
+            
+            # Run all (method, T) combinations on this image
+            for method_name, method_class in scoring_methods.items():
+                for T in temperatures:
+                    scorer = method_class(temperature=T)
+                    score = scorer.anomaly_score(logits_f32)
+                    score_accumulators[(method_name, T)].append(score)
+        
         del data
     
-    print(f"  (Loaded {len(all_logits_f32)} images)")
-    
+    # Compute metrics
     results = {name: {} for name in scoring_methods}
-    
-    for method_name, method_class in scoring_methods.items():
+    for method_name in scoring_methods:
         for T in temperatures:
-            scorer = method_class(temperature=T)
-            scores = [scorer.anomaly_score(logits) for logits in all_logits_f32]
-            metrics = calc_anomaly_metrics(all_gts, scores)
+            scores = score_accumulators[(method_name, T)]
+            metrics = calc_anomaly_metrics(gt_accumulator, scores)
             results[method_name][T] = metrics
     
     return results
