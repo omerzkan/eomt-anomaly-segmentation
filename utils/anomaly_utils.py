@@ -265,7 +265,7 @@ def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform,
                 saved_logits.append(logits_np.astype(np.float16))
                 saved_gts.append(gt_mask.astype(np.uint8))
                 
-                if len(saved_logits) >= 100:
+                if len(saved_logits) >= 50:
                     batch_num = len([f for f in os.listdir(save_logits_path) if f.startswith("batch_")]) if os.path.exists(save_logits_path) else 0
                     save_batch_to_npz(save_logits_path, batch_num, saved_logits, saved_gts)
                     saved_logits = []
