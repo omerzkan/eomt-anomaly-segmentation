@@ -1,7 +1,7 @@
 
 import json
 import os
-from time import time
+import time
 import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score
