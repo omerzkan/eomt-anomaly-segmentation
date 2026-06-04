@@ -2,7 +2,7 @@
 #==================================
 # INSERTING PATHS TO THE SYSTEM
 #==================================
-from glob import glob
+import glob
 import sys
 REPO_ROOT = "/content/cloned_repo_feature_omer"
 sys.path.insert(0, REPO_ROOT)
