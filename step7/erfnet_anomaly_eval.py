@@ -136,7 +136,7 @@ model.eval()
 scoring_methods = {
     "MSP":        MSP(),
     "MaxLogit":   MaxLogit(),
-    "MaxEntropy": MaxEntropy(),
+    "MaxEntropy": MaxEntropy()
 }
 
 

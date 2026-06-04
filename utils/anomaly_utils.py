@@ -128,6 +128,7 @@ def calc_anomaly_metrics(ood_gts_list, anomaly_score_list):
 
 
 def erfnet_anomaly_inference(model, image_paths, scoring_methods, input_transform, target_transform, device="cuda", description="ERFNeT Anomaly Inference", save_logits_path=None):
+    
     model.eval()
     ood_gts_list = []
     scores_per_method = {name: [] for name in scoring_methods}
@@ -153,7 +154,7 @@ def erfnet_anomaly_inference(model, image_paths, scoring_methods, input_transfor
             
             for name, method in scoring_methods.items():
                 
-                anomaly_score = method.anomaly_score(logits)
+                anomaly_score = method.anomaly_score(logits_np)
                 scores_per_method[name].append(anomaly_score)
                 
             if save_logits_path is not None:

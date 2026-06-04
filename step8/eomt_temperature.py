@@ -65,7 +65,8 @@ for model_name in MODELS:
         
         print(f"  {dataset_name}...", end=" ")
         
-        logits_file = os.path.join(logits_dir, "logits_and_gt.npz")
+        logits_file = f"{SAVED_LOGITS_ROOT}/{model_name}/{dataset_name}/logits_and_gt.npz"
+        
         dataset_results = evaluate_temperature(
             saved_logits_path=logits_file,
             scoring_methods=SCORING_METHODS,
