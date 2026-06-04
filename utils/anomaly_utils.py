@@ -302,32 +302,32 @@ def print_anomaly_results(model_name, all_results, save_json_path=None):
     return df_auprc, df_fpr
 
 def evaluate_temperature(saved_logits_path, scoring_methods, temperatures):
-
     import glob
     
     batch_files = sorted(glob.glob(os.path.join(saved_logits_path, "batch_*.npz")))
     if not batch_files:
         raise FileNotFoundError(f"No batch files in {saved_logits_path}")
     
+    # Load ALL images once, cast to float32 once
+    # This trades RAM for speed — fine for ERFNet (small images)
+    all_logits_f32 = []
+    all_gts = []
+    for bf in batch_files:
+        data = np.load(bf, allow_pickle=True)
+        for logits, gt in zip(data['logits'], data['gt']):
+            all_logits_f32.append(np.array(logits, dtype=np.float32))
+            all_gts.append(np.array(gt))
+        del data
+    
+    print(f"  (Loaded {len(all_logits_f32)} images)")
+    
     results = {name: {} for name in scoring_methods}
     
     for method_name, method_class in scoring_methods.items():
         for T in temperatures:
             scorer = method_class(temperature=T)
-            
-            all_scores = []
-            all_gts = []
-            
-            for bf in batch_files:
-                data = np.load(bf, allow_pickle=True)
-                for logits, gt in zip(data['logits'], data['gt']):
-                    logits_f32 = np.array(logits, dtype=np.float32)
-                    score = scorer.anomaly_score(logits_f32)
-                    all_scores.append(score)
-                    all_gts.append(gt)
-                del data
-            
-            metrics = calc_anomaly_metrics(all_gts, all_scores)
+            scores = [scorer.anomaly_score(logits) for logits in all_logits_f32]
+            metrics = calc_anomaly_metrics(all_gts, scores)
             results[method_name][T] = metrics
     
     return results
