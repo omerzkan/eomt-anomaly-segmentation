@@ -48,8 +48,8 @@ for model_name, data in all_temp_data.items():
     
     temperatures = data["temperatures"]
     methods = data["methods"]
-    datasets = data["datasets"]
     results = data["results"]
+    datasets = list(results.keys())  # Extract dataset names from results
     
     # Build separate tables for AUPRC and FPR95
     
@@ -149,8 +149,8 @@ for model_name, data in all_temp_data.items():
     
     temperatures = data["temperatures"]
     methods = data["methods"]
-    datasets = data["datasets"]
     results = data["results"]
+    datasets = list(results.keys())  # Extract dataset names from results
     
     # Build detailed rows for CSV (one row per method-dataset-temperature combo)
     detailed_rows = []
