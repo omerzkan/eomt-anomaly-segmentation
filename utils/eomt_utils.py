@@ -5,6 +5,7 @@ import torch
 from torch.cuda.amp import autocast
 import numpy as np
 import matplotlib.pyplot as plt
+from torch.nn import functional as F
 
 DEVICE = "cuda"
 N_CITYSCAPES_CLASSES = 19
@@ -328,16 +329,22 @@ def single_semantic_inference(model, image, remap_fn=None, device="cuda"):
     with torch.no_grad(), torch.amp.autocast(dtype=torch.float16, device_type="cuda"):
         imgs = [image.to(device)]
         img_sizes = [image.shape[-2:]]
-        transformed, origins, _  = model.resize_and_pad_imgs_semantic(imgs)
-        mask_logits, class_logits = model(transformed)
-        crop_logits = model.to_per_pixel_logits_semantic(mask_logits[-1], class_logits[-1])
+        
+        if hasattr(model, 'resize_and_pad_imgs_semantic'):
+            # Semantic model (Cityscapes, Fine-tuned)
+            transformed, origins, _ = model.resize_and_pad_imgs_semantic(imgs)
+            ml, cl = model(transformed)
+            crop_logits = model.to_per_pixel_logits_semantic(ml[-1], cl[-1])
+        else:
+            # Panoptic model (COCO)
+            crops, origins = model.window_imgs_semantic(imgs)
+            ml, cl = model(crops)
+            mask_logits = F.interpolate(ml[-1], model.img_size, mode='bilinear')
+            crop_logits = model.to_per_pixel_logits_semantic(mask_logits, cl[-1])
+        
         logits = model.revert_window_logits_semantic(crop_logits, origins, img_sizes)
     
     pred = logits[0].argmax(0).cpu()
-    
     if remap_fn is not None:
         pred = remap_fn(pred.long())
-    
     return pred.numpy()
-        
-        
