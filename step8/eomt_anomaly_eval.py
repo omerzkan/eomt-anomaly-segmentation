@@ -2,6 +2,7 @@
 #==================================
 # INSERTING PATHS TO THE SYSTEM
 #==================================
+import shutil
 import sys
 REPO_ROOT = "/content/cloned_repo_feature_omer"
 sys.path.insert(0, REPO_ROOT)
@@ -89,6 +90,13 @@ scoring_methods = {
 #==================================
 
 def evaluate_model_on_all_datasets(model, model_name, input_transform, target_transform, is_save_logits=True):
+    
+    if is_save_logits:
+        logits_root = f"/content/saved_logits/{model_name}"
+        if os.path.exists(logits_root):
+            shutil.rmtree(logits_root)
+            print(f"Cleared previous logits at {logits_root}")
+            
     all_results = {}
     for dataset_name, dataset_glob in DATASET_GLOBS.items():
         print(f"\n***************** {model_name} - {dataset_name} *****************\n")

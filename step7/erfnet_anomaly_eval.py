@@ -143,6 +143,12 @@ scoring_methods = {
 #==================================
 # 3-INFERENCE LOOP OVER ALL DATASETS
 #==================================
+
+import shutil
+if os.path.exists("/content/saved_logits/erfnet"):
+    shutil.rmtree("/content/saved_logits/erfnet")
+    print("Cleared previous ERFNet logits.")
+
 all_results = {}
  
 for dataset_name, dataset_glob in DATASET_GLOBS.items():
