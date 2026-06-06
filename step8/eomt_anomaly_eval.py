@@ -92,7 +92,7 @@ def evaluate_model_on_all_datasets(model, model_name, input_transform, target_tr
     all_results = {}
     for dataset_name, dataset_glob in DATASET_GLOBS.items():
         print(f"\n***************** {model_name} - {dataset_name} *****************\n")
-        image_paths = glob.glob(dataset_glob)
+        image_paths = sorted(glob.glob(dataset_glob))
         
         if(len(image_paths) == 0):
             print(f"Warning: No images found for {dataset_name}")
