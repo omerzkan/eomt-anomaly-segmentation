@@ -115,7 +115,7 @@ def build_model_table(model_name, data):
 # GENERATE AND PRINT TABLES
 # ==================================
  
-save_dir = f"{RESULTS_ROOT}/final"
+save_dir = f"{RESULTS_ROOT}/tables"
 os.makedirs(save_dir, exist_ok=True)
  
 all_tables = {}
@@ -133,7 +133,7 @@ for model_name, data in all_temp_data.items():
     
     # --- Save CSV ---
     safe_name = model_name.lower().replace("-", "_").replace(" ", "_")
-    csv_path = f"{save_dir}/{safe_name}_temperature_table.csv"
+    csv_path = f"{save_dir}/csv_tables/{safe_name}_temperature_table.csv"
     df.to_csv(csv_path, index=False)
     print(f"\n  Saved: {csv_path}")
  
@@ -208,7 +208,7 @@ for model_name, df in all_tables.items():
     latex = to_latex_table(df, model_name, caption)
     
     safe_name = model_name.lower().replace("-", "_").replace(" ", "_")
-    tex_path = f"{save_dir}/{safe_name}_temperature_table.tex"
+    tex_path = f"{save_dir}/latex_tables/{safe_name}_temperature_table.tex"
     with open(tex_path, 'w') as f:
         f.write(latex)
     print(f"  LaTeX saved: {tex_path}")

@@ -90,9 +90,9 @@ print(df.to_string(index=False))
 # CSV
 # ==================================
  
-save_dir = f"{RESULTS_ROOT}/final"
+save_dir = f"{RESULTS_ROOT}/tables"
 os.makedirs(save_dir, exist_ok=True)
-csv_path = f"{save_dir}/result_table.csv"
+csv_path = f"{save_dir}/csv_tables/result_table.csv"
 df.to_csv(csv_path, index=False)
 print(f"\n  CSV saved: {csv_path}")
  
@@ -156,7 +156,7 @@ lines.append(r"\end{tabular}}")
 lines.append(r"\end{table*}")
  
 latex = "\n".join(lines)
-tex_path = f"{save_dir}/result_table.tex"
+tex_path = f"{save_dir}/latex_tables/result_table.tex"
 with open(tex_path, 'w') as f:
     f.write(latex)
 print(f"  LaTeX saved: {tex_path}")
