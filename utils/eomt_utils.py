@@ -346,5 +346,5 @@ def single_semantic_inference(model, image, remap_fn=None, device="cuda"):
     
     pred = logits[0].argmax(0).cpu()
     if remap_fn is not None:
-        pred = remap_fn(pred.long())
+        pred = remap_fn(pred.long()).cpu()
     return pred.numpy()
