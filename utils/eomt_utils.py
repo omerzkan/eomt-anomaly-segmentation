@@ -1,7 +1,10 @@
 
 import importlib
 import sys, os
-
+import torch
+from torch.cuda.amp import autocast
+import numpy as np
+import matplotlib.pyplot as plt
 
 DEVICE = "cuda"
 N_CITYSCAPES_CLASSES = 19
@@ -23,8 +26,6 @@ def wandb_setup(enable=False):
     else:
         os.environ["WANDB_MODE"] = "disabled"
 
-# This function adds the specified repository path and optional subdirectories
-# to the Python module search path
 def insert_path(repo_path, subdirs=None):
     
     if subdirs is None:
@@ -34,15 +35,12 @@ def insert_path(repo_path, subdirs=None):
     
     sys.path.insert(0, full_path)
     
-# This function sets the random seed for everything
-# Python, Numpy, Pytorch
 def setup_seed(seed=42):
 
     from lightning import seed_everything
     seed_everything(seed, verbose=False)
 
 
-# function for reading a YAML config file and returning as a dictionary
 def read_yaml_config(config_path, sanity_check=False):
     
     import yaml
@@ -309,3 +307,37 @@ def compare_result_iou(model_name1, model_name2, per_class_iou1=None, per_class_
         print(f"\nResults saved to {save_json_path}\n")
         
     return df_miou, df_iou_per_class
+
+
+def create_mapping(images, ignore_index):
+    unique_ids = np.unique(np.concatenate([np.unique(img) for img in images]))
+    valid_ids = unique_ids[unique_ids != ignore_index]
+    colors = np.array([plt.cm.hsv(i / len(valid_ids)) for i in range(len(valid_ids))])
+    mapping = {cid: colors[i] for i, cid in enumerate(valid_ids)}
+    mapping[ignore_index] = np.array([0, 0, 0])
+    return mapping
+
+def apply_colormap(image, mapping):
+    colored = np.zeros((*image.shape, 3))
+    for cid, in np.unique(image):
+        colored[image==cid] = mapping.get(cid, [0, 0, 0])
+    return colored
+
+
+def single_semantic_inference(model, image, remap_fn=None, device="cuda"):
+    with torch.no_grad(), autocast(dtype=torch.float16, device_type="cuda"):
+        imgs = [image.to(device)]
+        img_sizes = [image.shape[-2:]]
+        transformed, origins, _  = model.resize_and_pad_imgs_semantic(imgs)
+        mask_logits, class_logits = model(transformed)
+        crop_logits = model.to_per_pixel_logits_semantic(mask_logits[-1], class_logits[-1])
+        logits = model.revert_window_logits_semantic(crop_logits, origins, img_sizes)
+    
+    pred = logits[0].argmax(0).cpu()
+    
+    if remap_fn is not None:
+        pred = remap_fn(pred.long())
+    
+    return pred.numpy()
+        
+        

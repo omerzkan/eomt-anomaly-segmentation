@@ -24,9 +24,11 @@ sys.path.insert(0, REPO_EOMT)
 
 import os
 import torch
+import numpy as np
 from torchmetrics.classification import MulticlassJaccardIndex
 from utils.eomt_utils import CITYSCAPES_CLASS_NAMES, DEVICE, IGNORE_INDEX, N_CITYSCAPES_CLASSES
-from utils.eomt_utils import build_model, compare_result_iou, print_results, insert_path, semantic_inference, setup_seed, wandb_setup
+from utils.eomt_utils import build_model, compare_result_iou, print_results, semantic_inference, setup_seed, wandb_setup, single_semantic_inference, create_mapping, apply_colormap
+import matplotlib.pyplot as plt
 
 #==================================
 # CONFIGURATION & SETUP
@@ -45,13 +47,12 @@ CHECKPOINT_PATH_CITYSCAPES_EOMT = "/content/drive/MyDrive/FAIMDL/checkpoints/eom
 DATA_PATH_CITYSCAPES_VALIDATION = "/content/drive/MyDrive/FAIMDL/data"
 # Root folder containing the dataset (images + annotations).
 
-
-#insert_path(repo_path=REPO_ROOT, subdirs=None)
+SAMPLE_INDICES = np.linspace(0, 499, 3, dtype=int)
 
 os.chdir(REPO_ROOT)
 # We change the directory to the REPO
 
-wandb_setup(enable=True)
+wandb_setup(enable=False)
 setup_seed(seed=42)
 
 #==================================
@@ -109,7 +110,7 @@ model_coco_trained = build_model(
     config_path=CONFIG_PATH_COCO_TRAINED,
     eval_mode=True,
     config_overriders=overriders_coco_trained,
-    sanity_check=True,
+    sanity_check=False,
     checkpoint_path=CHECKPOINT_PATH_COCO_EOMT,
     device=DEVICE
 )
@@ -156,12 +157,20 @@ print(df_miou_coco)
 print("\n")
 print(df_iou_per_class_coco)
 
-"""
-***************** CITYSCAPES TRAINED EOMT EVALUATION ON CITYSCAPES DATASET *****************
-"""
-print("\n***************** CITYSCAPES TRAINED EOMT EVALUATION ON CITYSCAPES DATASET *****************\n")
 #==================================
-# 1-RESET EVALUATOR & GPU CACHE
+# 4-SAVE 3 COCO PREDICTIONS FOR FIGURE
+#==================================
+
+# Save 3 COCO predictions for qualitative figure
+coco_preds_for_fig = []
+for idx in SAMPLE_INDICES:
+    img, target = val_loader.dataset[idx]
+    pred = single_semantic_inference(model_coco_trained, img, remap_fn=lambda p: lookup[p])
+    coco_preds_for_fig.append(pred)
+print(f"Saved {len(coco_preds_for_fig)} COCO predictions for figure.")
+
+#==================================
+# 5-RESET EVALUATOR & GPU CACHE
 #==================================
 
 del model_coco_trained
@@ -169,9 +178,14 @@ torch.cuda.empty_cache()
 
 evaluator.reset()
 
+"""
+***************** CITYSCAPES TRAINED EOMT EVALUATION ON CITYSCAPES DATASET *****************
+"""
+print("\n***************** CITYSCAPES TRAINED EOMT EVALUATION ON CITYSCAPES DATASET *****************\n")
+
 
 #==================================
-# 2-BUILD THE MODEL
+# 1-BUILD THE MODEL
 #==================================
 IMG_SIZE_CITYSCAPE = [1024,1024]
 overriders_cityscapes_trained = {
@@ -186,14 +200,14 @@ model_cityscapes_trained = build_model(
     config_path=CONFIG_PATH_CITYSCAPES_TRAINED,
     eval_mode=True,
     config_overriders=overriders_cityscapes_trained,
-    sanity_check=True,
+    sanity_check=False,
     checkpoint_path=CHECKPOINT_PATH_CITYSCAPES_EOMT,
     device=DEVICE
 )
 
 
 #==================================
-# 3-INFERENCE LOOP
+# 2-INFERENCE LOOP
 #==================================
 
 print("\n==================================")
@@ -209,7 +223,7 @@ evaluator_cityscapes_trained = semantic_inference(
 )
 
 #==================================
-# 4-PRINT & SAVE RESULT
+# 3-PRINT & SAVE RESULT
 #==================================
 cityscapes_trained_result_json_path = f"/content/drive/MyDrive/FAIMDL/results/step4/cityscapes_trained_eomt_on_cityscapes_results.json"
 per_class_iou_cityscapes_trained = evaluator_cityscapes_trained.compute().cpu().numpy()
@@ -219,6 +233,17 @@ print("\n")
 print(df_miou_cityscapes)
 print("\n")
 print(df_iou_per_class_cityscapes)
+
+#==================================
+# 4-SAVE 3 CITYSCAPES PREDICTIONS FOR FIGURE
+#==================================
+
+city_preds_for_fig, targets_for_fig, imgs_for_fig = [], [], []
+for idx in SAMPLE_INDICES:
+    img, target = val_loader.dataset[idx]
+    city_preds_for_fig.append(single_semantic_inference(model_cityscapes_trained, img))
+    targets_for_fig.append(model_cityscapes_trained.to_per_pixel_targets_semantic([target], IGNORE_INDEX)[0].numpy())
+    imgs_for_fig.append(img)
 
 """
 ***************** COMPARE & SAVE RESULTS FOR CITYSCAPES-TRAINED-EOMT vs COCO-TRAINED-EOMT EVALUATION ON CITYSCAPES DATASET *****************
@@ -236,3 +261,30 @@ print("\n")
 print(df_miou_compare)
 print("\n")
 print(df_iou_per_class_compare)
+
+
+"""
+***************** BUILD FIGURE & SAVE FOR CITYSCAPES-TRAINED-EOMT vs COCO-TRAINED-EOMT EVALUATION ON CITYSCAPES DATASET *****************
+"""
+
+FIGURE_DIR = "/content/drive/MyDrive/FAIMDL/results/figures/step4"
+os.makedirs(FIGURE_DIR, exist_ok=True)
+
+fig, axes = plt.subplots(3, 4, figsize=(20, 12))
+titles = ['Input', 'Ground Truth', 'EoMT-COCO', 'EoMT-Cityscapes']
+
+for row in range(3):
+    mapping = create_mapping([targets_for_fig[row], coco_preds_for_fig[row], city_preds_for_fig[row]], IGNORE_INDEX)
+    axes[row,0].imshow(imgs_for_fig[row].permute(1,2,0).cpu().numpy())
+    axes[row,1].imshow(apply_colormap(targets_for_fig[row], mapping))
+    axes[row,2].imshow(apply_colormap(coco_preds_for_fig[row], mapping))
+    axes[row,3].imshow(apply_colormap(city_preds_for_fig[row], mapping))
+    for col in range(4):
+        axes[row,col].axis('off')
+        if row == 0: axes[row,col].set_title(titles[col], fontsize=14, fontweight='bold')
+
+plt.tight_layout()
+fig.savefig(f'{FIGURE_DIR}/step4_comparison.pdf', dpi=300, bbox_inches='tight')
+fig.savefig(f'{FIGURE_DIR}/step4_comparison.png', dpi=200, bbox_inches='tight')
+plt.show()
+print(f'Saved to {FIGURE_DIR}/')
