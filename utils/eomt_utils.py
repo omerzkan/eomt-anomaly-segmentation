@@ -312,14 +312,14 @@ def compare_result_iou(model_name1, model_name2, per_class_iou1=None, per_class_
 def create_mapping(images, ignore_index):
     unique_ids = np.unique(np.concatenate([np.unique(img) for img in images]))
     valid_ids = unique_ids[unique_ids != ignore_index]
-    colors = np.array([plt.cm.hsv(i / len(valid_ids)) for i in range(len(valid_ids))])
+    colors = np.array([plt.cm.hsv(i / len(valid_ids))[:3] for i in range(len(valid_ids))])
     mapping = {cid: colors[i] for i, cid in enumerate(valid_ids)}
     mapping[ignore_index] = np.array([0, 0, 0])
     return mapping
 
 def apply_colormap(image, mapping):
     colored = np.zeros((*image.shape, 3))
-    for cid, in np.unique(image):
+    for cid in np.unique(image):
         colored[image==cid] = mapping.get(cid, [0, 0, 0])
     return colored
 

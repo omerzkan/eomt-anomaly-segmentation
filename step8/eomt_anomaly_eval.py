@@ -320,4 +320,69 @@ print("\n=== AuPRC (%) ===\n")
 print(df_auprc_finetuned)
 print("\n=== FPR95 (%) ===\n")
 print(df_fpr95_finetuned)
- 
+
+
+"""
+***************** SECTION 4: QUALITATIVE FIGURE: ANOMALY SCORE MAPS *****************
+Uses saved logits from eomt_cityscapes on RoadAnomaly21
+"""
+import matplotlib.pyplot as plt
+from utils.anomaly_utils import load_gt_mask
+
+FIGURE_DIR = "/content/drive/MyDrive/FAIMDL/results/figures/step8"
+os.makedirs(FIGURE_DIR, exist_ok=True)
+
+# --- Load saved logits ---
+logits_path = "/content/saved_logits/eomt_cityscapes/RoadAnomaly21/batch_0.npz"
+
+if os.path.exists(logits_path):
+    data = np.load(logits_path, allow_pickle=True)
+    logits_batch = data["logits"]
+    gts_batch = data["gt"]
+
+    # --- Match to original image paths ---
+    ra21_paths = sorted(glob.glob(DATASET_GLOBS["RoadAnomaly21"]))
+    target_t = Compose([Resize((1024, 1024), Image.NEAREST)])
+    valid_paths = []
+    for p in ra21_paths:
+        gt = load_gt_mask(p, target_t)
+        if 1 in np.unique(gt):
+            valid_paths.append(p)
+        if len(valid_paths) >= len(logits_batch):
+            break
+
+    # --- Plot ---
+    N_SHOW = min(3, len(logits_batch), len(valid_paths))
+    methods = {"MSP": MSP(), "MaxLogit": MaxLogit(), "MaxEntropy": MaxEntropy(), "RbA": RbA()}
+    fig, axes = plt.subplots(N_SHOW, 6, figsize=(21, 3.5 * N_SHOW))
+    titles = ["Input", "GT Mask", "MSP", "MaxLogit", "MaxEntropy", "RbA"]
+
+    for row in range(N_SHOW):
+        img_np = np.array(Image.open(valid_paths[row]).convert("RGB"))
+        axes[row, 0].imshow(img_np)
+
+        gt = gts_batch[row]
+        gt_vis = np.zeros((*gt.shape, 3), dtype=np.uint8)
+        gt_vis[gt == 0] = [0, 0, 180]
+        gt_vis[gt == 1] = [255, 0, 0]
+        gt_vis[gt == 255] = [128, 128, 128]
+        axes[row, 1].imshow(gt_vis)
+
+        logits = np.array(logits_batch[row], dtype=np.float32)
+        for col, (name, m) in enumerate(methods.items()):
+            score = m.anomaly_score(logits)
+            axes[row, 2 + col].imshow(score, cmap="hot", interpolation="bilinear")
+
+        for col in range(6):
+            axes[row, col].axis("off")
+            if row == 0:
+                axes[row, col].set_title(titles[col], fontsize=13, fontweight="bold")
+
+    plt.tight_layout()
+    fig.savefig(f"{FIGURE_DIR}/step8_anomaly_maps.pdf", dpi=300, bbox_inches="tight")
+    fig.savefig(f"{FIGURE_DIR}/step8_anomaly_maps.png", dpi=200, bbox_inches="tight")
+    plt.show()
+    print(f"Saved to {FIGURE_DIR}/")
+
+else:
+    print(f"No saved logits found at {logits_path}. Run eomt_cityscapes inference first.")
