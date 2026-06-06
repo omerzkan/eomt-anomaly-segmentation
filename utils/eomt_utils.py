@@ -325,7 +325,7 @@ def apply_colormap(image, mapping):
 
 
 def single_semantic_inference(model, image, remap_fn=None, device="cuda"):
-    with torch.no_grad(), autocast(dtype=torch.float16, device_type="cuda"):
+    with torch.no_grad(), torch.amp.autocast(dtype=torch.float16, device_type="cuda"):
         imgs = [image.to(device)]
         img_sizes = [image.shape[-2:]]
         transformed, origins, _  = model.resize_and_pad_imgs_semantic(imgs)

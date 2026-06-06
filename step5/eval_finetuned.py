@@ -23,7 +23,7 @@ sys.path.insert(0, REPO_EOMT)
 import os
 from torchmetrics.classification import MulticlassJaccardIndex
 from utils.eomt_utils import CITYSCAPES_CLASS_NAMES, DEVICE, IGNORE_INDEX, N_CITYSCAPES_CLASSES
-from utils.eomt_utils import build_model, semantic_inference, insert_path, setup_seed, wandb_setup, compare_result_iou, print_results
+from utils.eomt_utils import build_model, semantic_inference, setup_seed, wandb_setup, compare_result_iou, print_results
 import json
 import numpy as np
 
@@ -43,7 +43,7 @@ CHECKPOINT_PATH_COCO_FINETUNED_ON_CITYSCAPES = "/content/drive/MyDrive/FAIMDL/ch
 os.chdir(REPO_ROOT)
 # We change the directory to the REPO
 
-wandb_setup(enable=True)
+wandb_setup(enable=False)
 setup_seed(seed=42)
 
 #==================================
@@ -98,7 +98,7 @@ model_coco_finetuned_on_cityscapes = build_model(
     config_path=CONFIG_PATH_CITYSCAPES_TRAINED,
     eval_mode=True,
     config_overriders=overriders_coco_finetuned_on_cityscapes,
-    sanity_check=True,
+    sanity_check=False,
     checkpoint_path=CHECKPOINT_PATH_COCO_FINETUNED_ON_CITYSCAPES,
     device=DEVICE
 )
@@ -118,7 +118,7 @@ evaluator_coco_finetuned_on_cityscapes = semantic_inference(
     remap_function=None,  # no remapping, this model trained on Cityscapes and outputs Cityscapes
     evaluator=evaluator, 
     device=DEVICE, 
-    description="Evaluation Fine tuned on Cityscapes dataset version of COCO Trained EoMT on CityScapes DataSet"
+    description="Finetuned-EoMT on Cityscapes dataset"
 )
 
 #==================================
@@ -128,7 +128,7 @@ result_json_path_coco_finetuned_on_cityscapes = f"/content/drive/MyDrive/FAIMDL/
 
 per_class_iou_coco_finetuned_on_cityscapes = evaluator_coco_finetuned_on_cityscapes.compute().cpu().numpy()
 
-df_miou_finetuned_coco_on_city, df_iou_per_class_finetuned_coco_on_city = print_results(model_name="COCO-trained EoMT Fine-tuned on CityScapes", per_class_iou=per_class_iou_coco_finetuned_on_cityscapes, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=result_json_path_coco_finetuned_on_cityscapes)
+df_miou_finetuned_coco_on_city, df_iou_per_class_finetuned_coco_on_city = print_results(model_name="Finetuned-EoMT on CityScapes", per_class_iou=per_class_iou_coco_finetuned_on_cityscapes, class_names=CITYSCAPES_CLASS_NAMES, save_json_path=result_json_path_coco_finetuned_on_cityscapes)
 print("\n")
 print(df_miou_finetuned_coco_on_city)
 print("\n")
@@ -154,8 +154,8 @@ per_class_iou_coco_trained = np.array(list(coco_results['per_class'].values()))
 #==================================
 
 df_miou_compare, df_iou_per_class_compare = compare_result_iou(
-    "COCO-trained EoMT Fine Tuned on CityScapes",
-    "COCO-trained EoMT", 
+    "Finetuned-EoMT",
+    "COCO-EoMT", 
     per_class_iou1=per_class_iou_coco_finetuned_on_cityscapes,
     per_class_iou2=per_class_iou_coco_trained,
     class_names=CITYSCAPES_CLASS_NAMES,
