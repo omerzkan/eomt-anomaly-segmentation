@@ -27,7 +27,7 @@ class MaxLogit:
     
     def anomaly_score(self, logits): # this is the raw logits before softmax
         
-        anomaly_result = 1.0 - np.max(logits, axis=0)    
+        anomaly_result = -np.max(logits, axis=0)    
         return anomaly_result
     
     
