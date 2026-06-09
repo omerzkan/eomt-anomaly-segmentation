@@ -53,6 +53,16 @@ EoMT-Cityscapes is dominant on anomaly detection (e.g. **74.36 vs 38.31** AuPRC 
 ```
 
 ---
+## Pre-trained checkpoint
+
+Fine-tuned EoMT-Cityscapes (78.85% mIoU): [download](https://github.com/omerzkan/eomt-anomaly-segmentation/releases/download/v1.0/coco_eomt_finetuned_on_cityscapes.bin) (357 MB)
+
+```bash
+mkdir -p checkpoints
+wget -P checkpoints https://github.com/omerzkan/eomt-anomaly-segmentation/releases/download/v1.0/coco_eomt_finetuned_on_cityscapes.bin
+```
+
+Checkpoint released under the MIT License, inherited from the base EoMT model ([Kerssies & de Geus, CVPR 2025](https://github.com/tue-mps/eomt)).
 
 ## Setup (Google Colab + Google Drive)
 
