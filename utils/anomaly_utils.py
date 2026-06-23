@@ -217,16 +217,43 @@ def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform,
             with torch.autocast(device_type=device):
                 
                 crops, origins = model.window_imgs_semantic(imgs)
-                mask_logits_list, class_logits_list = model(crops)
-                mask_logits = F.interpolate(mask_logits_list[-1], model.img_size, mode='bilinear')
+                mask_logits_list, class_logits_list = model(crops)mask_logits = F.interpolate(
+                mask_logits_list[-1],
+                model.img_size,
+                mode="bilinear",
+            )
+                
+                class_logits = class_logits_list[-1]
+                
+                # Standard per-class score map used by MSP / MaxLogit / MaxEntropy
                 crop_logits = model.to_per_pixel_logits_semantic(
-                    mask_logits, class_logits_list[-1]
+                    mask_logits,
+                    class_logits,
                 )
+                
                 logits = model.revert_window_logits_semantic(
-                    crop_logits, origins, img_sizes
+                    crop_logits,
+                    origins,
+                    img_sizes,
                 )
-            
-            logits_np = logits[0].float().cpu().numpy()
+                
+                logits_np = logits[0].float().cpu().numpy()
+                
+                #RbA computed directly from mask-query outputs
+                crop_rba_score = eomt_rba_score_from_outputs(
+                    mask_logits=mask_logits,
+                    class_logits=class_logits,
+                )
+                
+                rba_score = model.revert_window_logits_semantic(
+                    crop_rba_score.unsqueeze(1),
+                    origins,
+                    img_sizes,
+                )
+                
+                rba_score_np = rba_score[0, 0].float().cpu().numpy()
+                                
+                
             
             gt_mask = load_gt_mask(path, target_transform)
             
@@ -236,8 +263,11 @@ def eomt_anomaly_inference(model, image_paths, scoring_methods, input_transform,
             ood_gts_list.append(gt_mask)
             
             for name, method in scoring_methods.items():
-                
-                anomaly_score = method.anomaly_score(logits_np)
+                if name == "RbA":
+                    anomaly_score = rba_score_np
+                else:
+                    anomaly_score = method.anomaly_score(logits_np)
+            
                 scores_per_method[name].append(anomaly_score)
         
             if save_logits_path is not None:
