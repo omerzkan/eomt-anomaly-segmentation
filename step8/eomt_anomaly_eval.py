@@ -77,6 +77,9 @@ DATASET_GLOBS = {
 # SCORING METHODS
 #==================================
 # All 4 post-hoc methods at default temperature (T=1.0).
+# RbA is listed here as a method name, but for EoMT it is computed
+# directly inside eomt_anomaly_inference from mask_logits and class_logits,
+# following Nayal et al. (ICCV 2023).
 
 scoring_methods = {
     "MSP":        MSP(),
