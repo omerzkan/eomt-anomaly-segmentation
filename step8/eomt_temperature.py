@@ -12,8 +12,7 @@ sys.path.insert(0, REPO_ROOT)
 #==================================
 import os
 import json
-from utils.anomaly_utils import MSP, MaxEntropy, RbA, evaluate_temperature
- 
+from utils.anomaly_utils import MSP, MaxEntropy, evaluate_temperature 
 #==================================
 # CONFIGURATION
 #==================================
@@ -33,11 +32,9 @@ DATASET_NAMES = [
     "RoadAnomaly",
 ]
  
-# EoMT is mask-based → MSP, MaxEntropy, and RbA (all support temperature)
 SCORING_METHODS = {
     "MSP": MSP,
     "MaxEntropy": MaxEntropy,
-    "RbA": RbA,
 }
  
 MODELS = ["eomt_cityscapes", "eomt_finetuned"]
