@@ -167,6 +167,9 @@ Each method is also evaluated with temperature scaling over `T ∈ {0.5, 0.75, 1
 - Only post-hoc methods are explored; no outlier exposure or auxiliary training.
 
 ---
+## Improvements
+
+- We improved RbA by computing it directly from the EoMT mask-classification outputs. We aggregate query-level mask probabilities and class probabilities into       per-class pixel score maps, exclude the no-object class, and then compute the RbA score as the negative sum of tanh-normalized known-class scores. This follows    the rejected-by-all idea more explicitly than treating RbA as a generic confidence score.
 
 ## References
 
