@@ -61,14 +61,61 @@ class MaxEntropy:
         return entropy
 
 class RbA:
-    def __init__(self, temperature=1.0):
-        self.temperature = temperature
-    
-    def anomaly_score(self, logits):
+    """
+    DEĞIŞIM 1 
+    Formula:
+        RbA(x) = - sum_k tanh(L_k(x))
         
-        scaled_logits = apply_temperature(logits, self.temperature)    
-        return -np.tanh(scaled_logits).sum(axis=0)
-    
+    Higher score => more anomalous.
+    """
+
+    def __init__(self, temperature=1.0):
+        # Temperature scaling is NOT part of the original RbA definition in the paper.
+        self.temperature = 1.0
+
+    def anomaly_score(self, logits_or_class_scores):
+        logits_or_class_scores = np.asarray(logits_or_class_scores, dtype=np.float32)
+
+        if logits_or_class_scores.ndim != 3:
+            raise ValueError(
+                f"RbA expects shape (C, H, W), got {logits_or_class_scores.shape}"
+            )
+
+        return -np.tanh(logits_or_class_scores).sum(axis=0)
+def eomt_rba_score_from_outputs(mask_logits, class_logits):
+    """
+    DEĞIŞIM 2
+    Inputs:
+        mask_logits:  torch.Tensor of shape (B, Q, H, W)
+        class_logits: torch.Tensor of shape (B, Q, C+1)
+    The last class is the no-object class and is removed.
+    Formula:
+        L_k(x) = sum_q P_q(k) * M_q(x)
+        RbA(x) = - sum_k tanh(L_k(x))
+    Output:
+        torch.Tensor of shape (B, H, W)
+    """
+
+    if mask_logits.ndim != 4:
+        raise ValueError(f"mask_logits must have shape (B, Q, H, W), got {mask_logits.shape}")
+
+    if class_logits.ndim != 3:
+        raise ValueError(f"class_logits must have shape (B, Q, C+1), got {class_logits.shape}")
+
+    # Region membership probabilities: M_q(x)
+    mask_probs = mask_logits.sigmoid()
+
+    # Region class probabilities: P_q(k)
+    # Remove the final no-object / null class.
+    class_probs = class_logits.softmax(dim=-1)[..., :-1]
+
+    # Per-class pixel score map L_k(x)
+    class_score_map = torch.einsum("bqhw,bqc->bchw", mask_probs, class_probs)
+
+    # RbA score map
+    rba_score = -torch.tanh(class_score_map).sum(dim=1)
+
+    return rba_score
 
 def load_gt_mask(image_path, target_transform=None):
     
