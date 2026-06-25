@@ -92,7 +92,7 @@ def eomt_rba_score_from_outputs(mask_logits, class_logits):
     The last class is the no-object class and is removed.
     Formula:
         L_k(x) = sum_q P_q(k) * M_q(x)
-        RbA(x) = - sum_k tanh(L_k(x))
+        RbA(x) = - sum_k L_k(x)
     Output:
         torch.Tensor of shape (B, H, W)
     """
@@ -114,7 +114,7 @@ def eomt_rba_score_from_outputs(mask_logits, class_logits):
     class_score_map = torch.einsum("bqhw,bqc->bchw", mask_probs, class_probs)
 
     # RbA score map
-    rba_score = -torch.tanh(class_score_map).sum(dim=1)
+    rba_score = -class_score_map.sum(dim=1)
 
     return rba_score
 
