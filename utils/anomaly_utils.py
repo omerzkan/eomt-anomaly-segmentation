@@ -81,7 +81,7 @@ class RbA:
                 f"RbA expects shape (C, H, W), got {logits_or_class_scores.shape}"
             )
 
-        return np.tanh(logits_or_class_scores).sum(axis=0)
+        return -logits_or_class_scores.sum(axis=0)
 def eomt_rba_score_from_outputs(mask_logits, class_logits):
     """
     DEĞIŞIM 2
