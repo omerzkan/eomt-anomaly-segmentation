@@ -62,16 +62,27 @@ class MaxEntropy:
 
 class RbA:
     """
-    DEĞIŞIM 1 
-    Formula:
-        RbA(x) = - sum_k tanh(L_k(x))
-        
-    Higher score => more anomalous.
+    Rejected by All (RbA) anomaly score.
+
+    Idea:
+        A pixel is anomalous when the total acceptance by all known classes is low.
+
+    In this project, the input is the EoMT per-class semantic score map
+    with shape (C, H, W), already produced from mask/class predictions.
+
+    Score:
+        RbA(x) = - sum_k L_k(x)
+
+    Then we normalize the score map per image to [0, 1] for more stable
+    ranking across images.
+
+    Higher score = more anomalous.
     """
 
-    def __init__(self, temperature=1.0):
-        # Temperature scaling is NOT part of the original RbA definition in the paper.
+    def __init__(self, temperature=1.0, normalize=True):
+        # Temperature is ignored because it is not used in this RbA variant.
         self.temperature = 1.0
+        self.normalize = normalize
 
     def anomaly_score(self, logits_or_class_scores):
         logits_or_class_scores = np.asarray(logits_or_class_scores, dtype=np.float32)
@@ -81,7 +92,18 @@ class RbA:
                 f"RbA expects shape (C, H, W), got {logits_or_class_scores.shape}"
             )
 
-        return -logits_or_class_scores.sum(axis=0)
+        # Low known-class mass means high anomaly score.
+        score = -logits_or_class_scores.sum(axis=0)
+
+        # Per-image min-max normalization.
+        if self.normalize:
+            score_min = score.min()
+            score_max = score.max()
+
+            if score_max > score_min:
+                score = (score - score_min) / (score_max - score_min)
+
+        return score
 def eomt_rba_score_from_outputs(mask_logits, class_logits):
     """
     DEĞIŞIM 2
