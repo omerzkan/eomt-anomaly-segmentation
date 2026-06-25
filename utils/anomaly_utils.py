@@ -62,27 +62,17 @@ class MaxEntropy:
 
 class RbA:
     """
-    Rejected by All (RbA) anomaly score.
-
-    Idea:
-        A pixel is anomalous when the total acceptance by all known classes is low.
-
+    Idea: A pixel is anomalous when the total acceptance by all known classes is low.
     In this project, the input is the EoMT per-class semantic score map
     with shape (C, H, W), already produced from mask/class predictions.
-
     Score:
         RbA(x) = - sum_k L_k(x)
 
-    Then we normalize the score map per image to [0, 1] for more stable
-    ranking across images.
-
-    Higher score = more anomalous.
+    Higher score => more anomalous.
     """
 
-    def __init__(self, temperature=1.0, normalize=True):
-        # Temperature is ignored because it is not used in this RbA variant.
+    def __init__(self, temperature=1.0):
         self.temperature = 1.0
-        self.normalize = normalize
 
     def anomaly_score(self, logits_or_class_scores):
         logits_or_class_scores = np.asarray(logits_or_class_scores, dtype=np.float32)
@@ -92,21 +82,10 @@ class RbA:
                 f"RbA expects shape (C, H, W), got {logits_or_class_scores.shape}"
             )
 
-        # Low known-class mass means high anomaly score.
-        score = -logits_or_class_scores.sum(axis=0)
-
-        # Per-image min-max normalization.
-        if self.normalize:
-            score_min = score.min()
-            score_max = score.max()
-
-            if score_max > score_min:
-                score = (score - score_min) / (score_max - score_min)
-
-        return score
+        return -logits_or_class_scores.sum(axis=0)
+        
 def eomt_rba_score_from_outputs(mask_logits, class_logits):
     """
-    DEĞIŞIM 2
     Inputs:
         mask_logits:  torch.Tensor of shape (B, Q, H, W)
         class_logits: torch.Tensor of shape (B, Q, C+1)
