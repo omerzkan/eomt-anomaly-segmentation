@@ -107,7 +107,7 @@ def eomt_rba_score_from_outputs(mask_logits, class_logits):
     mask_probs = mask_logits.sigmoid()
 
     # Region class probabilities: P_q(k)
-    # Remove the final no-object / null class.
+    # Remove the final no-object 
     class_probs = class_logits.softmax(dim=-1)[..., :-1]
 
     # Per-class pixel score map L_k(x)
