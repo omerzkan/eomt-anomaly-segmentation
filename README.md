@@ -135,10 +135,9 @@ Four post-hoc scoring functions are applied on top of frozen segmentation models
 - **MSP** — Maximum Softmax Probability (`1 − max softmax`).
 - **MaxLogit** — `−max(logits)`; rank-equivalent to `1.0 − max(logits)`.
 - **MaxEntropy** — Shannon entropy of the softmax distribution.
-- **RbA** (mask architectures only) — `−Σ tanh(class_logits)` across class axis, following the official RbA implementation. Crucially, RbA does **not** apply softmax to mask-architecture logits, since the independence assumption it requires holds at the query level rather than across mutually exclusive classes.
+- **RbA** (mask architectures only) — computed from the EoMT per-class semantic score map obtained by combining query-level mask probabilities and class probabilities after excluding the no-object class. The final RbA score is the negative total known-class mass. RbA is not temperature-scaled.
 
-Each method is also evaluated with temperature scaling over `T ∈ {0.5, 0.75, 1.0, 1.1, 1.5, 2.0}`. The main finding is that AuPRC is largely insensitive to T, while FPR95 can swing substantially (especially for RbA), making post-hoc temperature calibration unreliable as a tuning knob on these benchmarks.
-
+Temperature scaling is evaluated only for MSP and MaxEntropy. MaxLogit is not temperature-scaled because it uses raw logits, and RbA is reported separately because the revised score is based on the total known-class semantic mass.
 ### Datasets
 
 - **Cityscapes** for closed-set semantic segmentation evaluation.
@@ -169,7 +168,7 @@ Each method is also evaluated with temperature scaling over `T ∈ {0.5, 0.75, 1
 ---
 ## Improvements ( After the feedback )
 
-- We improved RbA by computing it directly from the EoMT mask-classification outputs. We aggregate query-level mask probabilities and class probabilities into       per-class pixel score maps, exclude the no-object class, and then compute the RbA score as the negative sum of tanh-normalized known-class scores. This follows    the rejected-by-all idea more explicitly than treating RbA as a generic confidence score.
+- We improved RbA by computing it directly from the EoMT mask-classification outputs. After converting query masks into mask probabilities and class logits into class probabilities, we remove the no-object class and aggregate them into per-class pixel score maps. The final RbA score is then computed as the negative total known-class semantic mass. This better matches the rejected-by-all idea, where anomalous pixels should receive low acceptance from all known classes.
 
 ## References
 
