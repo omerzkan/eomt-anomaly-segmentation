@@ -63,8 +63,8 @@ class MaxEntropy:
 class RbA:
     """
     Idea: A pixel is anomalous when the total acceptance by all known classes is low.
-    In this project, the input is the EoMT per-class semantic score map
-    with shape (C, H, W), already produced from mask/class predictions.
+    The input is the EoMT per-class semantic score map
+    with shape (C, H, W), produced from mask/class predictions.
     Score:
         RbA(x) = - sum_k L_k(x)
 
